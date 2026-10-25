@@ -1,0 +1,1864 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#FAF8F5">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>둥글이 스튜디오 - 1인 AI 숏폼 방송국 & 방문 리워드 SaaS</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="assets/doongle_data.js"></script>
+  <script src="assets/doongle_voice_data.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              bg: '#FAF8F5',
+              card: '#FFFDF9',
+              border: '#EFE8DC',
+              cream: '#FBF7EE',
+              text: '#292524',
+              muted: '#78716C',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @keyframes kenburns {
+      0% { transform: scale(1.0); }
+      50% { transform: scale(1.15) translate(-1%, -1%); }
+      100% { transform: scale(1.0); }
+    }
+    .kenburns-bg {
+      animation: kenburns 10s ease-in-out infinite alternate;
+    }
+    @keyframes doongleRunJump {
+      0% { transform: translateX(-80px) translateY(0) scale(0.98) rotate(-3deg); }
+      25% { transform: translateX(-35px) translateY(-18px) scale(1.02) rotate(4deg); }
+      50% { transform: translateX(15px) translateY(0) scale(0.98) rotate(-2deg); }
+      75% { transform: translateX(60px) translateY(-20px) scale(1.03) rotate(5deg); }
+      100% { transform: translateX(95px) translateY(0) scale(0.98) rotate(-1deg); }
+    }
+    .doongle-running {
+      animation: doongleRunJump 2.2s ease-in-out infinite alternate;
+    }
+    @keyframes shoutPulse {
+      0%, 100% { transform: scale(1) rotate(-2deg); }
+      50% { transform: scale(1.12) rotate(3deg); }
+    }
+    .shout-bubble {
+      animation: shoutPulse 0.9s ease-in-out infinite;
+    }
+    /* 스마트폰 뷰포트 & 폰 프레임 모드 스타일 */
+    .phone-frame-mode {
+      background: #18181B !important;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 20px 10px;
+      transition: all 0.3s ease;
+    }
+    .phone-frame-container {
+      width: 100%;
+      max-width: 420px;
+      min-height: 860px;
+      background: #FAF8F5;
+      border-radius: 48px;
+      box-shadow: 0 30px 70px -15px rgba(0, 0, 0, 0.8), 0 0 0 10px #27272A, 0 0 0 12px #3F3F46;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      transition: all 0.3s ease;
+    }
+    /* iOS 홈 인디케이터 바 */
+    .ios-home-bar {
+      width: 130px;
+      height: 4px;
+      background: #1C1917;
+      border-radius: 9999px;
+      margin: 8px auto 6px auto;
+      opacity: 0.4;
+    }
+  </style>
+</head>
+<body class="bg-[#FAF8F5] text-[#292524] min-h-screen flex flex-col font-sans selection:bg-amber-200">
+
+  <!-- 전체 앱 래퍼 컨테이너 (폰 프레임 모드 시 스마트폰 목업 기기로 전환) -->
+  <div id="app-root-wrapper" class="w-full min-h-screen flex flex-col transition-all">
+
+    <!-- 스마트폰 프레임 모드 전용 상단 상태바 (시간, 다이내믹 아일랜드, 배터리) -->
+    <div id="phone-status-bar" class="hidden w-full bg-[#FAF8F5] px-6 pt-3 pb-2 flex items-center justify-between text-xs font-bold text-stone-800 select-none border-b border-stone-200/50 z-50">
+      <span class="tracking-tight font-black text-[13px]">9:41</span>
+      <!-- 다이내믹 아일랜드 알약 -->
+      <div class="w-20 h-4 bg-stone-900 rounded-full flex items-center justify-end px-2 gap-1 shadow-inner">
+        <div class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+      </div>
+      <div class="flex items-center gap-1.5 text-[11px] font-extrabold text-stone-700">
+        <span>5G</span>
+        <span>📶</span>
+        <span>🔋 100%</span>
+      </div>
+    </div>
+
+    <!-- 1. 감성 상단 네비게이션 -->
+    <header class="sticky top-0 z-40 bg-[#FAF8F5]/95 backdrop-blur-md border-b border-[#EFE8DC]">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
+        <!-- 로고 (둥글이 귀여운 얼굴 마크 - 확대 및 클릭 시 미니 영상 재생) -->
+        <div class="flex items-center gap-3">
+          <!-- 둥글이 마크 버튼: 크기 확대(w-16 h-16) + 클릭 시 미니 비디오 화면 팝업 -->
+          <button
+            type="button"
+            onclick="openDoongleMiniPlayer()"
+            class="relative group focus:outline-none"
+            title="둥글이 마크를 누르면 귀여운 소개 영상이 재생됩니다!"
+          >
+            <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-tr from-amber-300 via-amber-200 to-amber-100 border-2 border-amber-400 flex items-center justify-center shadow-md group-hover:scale-108 active:scale-95 group-hover:shadow-amber-300/80 group-hover:shadow-lg transition-all duration-200 overflow-hidden p-1 cursor-pointer ring-4 ring-amber-200/50">
+              <img id="nav-doongle-img" src="assets/doongle_face.png" onerror="if(window.DOONGLE_FACE_BASE64) this.src=window.DOONGLE_FACE_BASE64;" alt="둥글이 얼굴 마크" class="w-full h-full object-cover rounded-full" />
+            </div>
+            <!-- 마크 우하단 재생 뱃지 -->
+            <div class="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-amber-500 text-stone-950 flex items-center justify-center text-[10px] font-black shadow-md border-2 border-white group-hover:scale-115 transition-transform animate-bounce">
+              ▶
+            </div>
+            <!-- 툴팁 -->
+            <div class="absolute left-1/2 -translate-x-1/2 top-full mt-2 hidden group-hover:flex items-center gap-1 px-2.5 py-1 bg-stone-900/95 text-amber-200 text-[10px] font-extrabold rounded-xl shadow-xl whitespace-nowrap pointer-events-none z-50">
+              <span>🎬</span> 둥글이 영상 보기 (클릭!)
+            </div>
+          </button>
+
+          <div onclick="switchTab('upload')" class="flex flex-col cursor-pointer group">
+            <span class="text-base sm:text-lg font-black tracking-tight text-stone-800 flex items-center gap-1.5 group-hover:text-amber-800 transition-colors">
+              둥글이 스튜디오
+              <span class="px-2 py-0.5 text-[10px] font-extrabold bg-amber-100 text-amber-900 rounded-full border border-amber-300/60 shadow-2xs">
+                1인 AI 방송국
+              </span>
+            </span>
+            <span class="text-[11px] text-stone-500 font-medium truncate max-w-[170px] sm:max-w-none">
+              방문 인증 리워드 & AI 가상체험 숏폼 SaaS
+            </span>
+          </div>
+        </div>
+
+        <!-- 데스크톱 탭 네비게이션 -->
+        <nav class="hidden md:flex items-center gap-1.5">
+          <button id="nav-upload" onclick="switchTab('upload')" class="px-3 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 bg-amber-100 text-amber-900 border border-amber-200 shadow-sm transition-all">
+            <span>📸</span> 장소 리워드
+          </button>
+          <button id="nav-admin" onclick="switchTab('admin')" class="px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-1.5 text-stone-600 hover:text-stone-900 hover:bg-stone-100/70 transition-all">
+            <span>🎬</span> 숏폼 스튜디오
+          </button>
+          <button id="nav-motion" onclick="switchTab('motion')" class="px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-1.5 text-stone-600 hover:text-stone-900 hover:bg-stone-100/70 transition-all">
+            <span>✨</span> AI 모션 스왑
+          </button>
+          <button id="nav-pricing" onclick="switchTab('pricing')" class="px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-1.5 text-stone-600 hover:text-stone-900 hover:bg-stone-100/70 transition-all">
+            <span>👑</span> Pro 구독
+          </button>
+        </nav>
+
+        <!-- 우측 도구: 포인트 배지 & 폰 화면 모드 토글 버튼 -->
+        <div class="flex items-center gap-2">
+          <!-- [📱 폰 화면 모드 토글 버튼] -->
+          <button
+            id="btn-toggle-phone-view"
+            onclick="togglePhoneFrameMode()"
+            class="px-2.5 py-1.5 rounded-full bg-amber-400 hover:bg-amber-300 active:bg-amber-500 text-stone-950 font-black text-[11px] sm:text-xs flex items-center gap-1 shadow-sm transition-all border border-amber-500/40"
+            title="스마트폰 화면 크기로 전환하여 보기"
+          >
+            <span id="btn-phone-icon">📱</span>
+            <span id="btn-phone-label" class="hidden sm:inline">폰 화면으로 보기</span>
+            <span id="btn-phone-label-mob" class="sm:hidden font-black">폰뷰</span>
+          </button>
+
+          <!-- 유저 리워드 포인트 배지 -->
+          <div class="flex items-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 bg-white/90 border border-amber-200 rounded-full shadow-sm">
+            <div class="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-[10px] sm:text-xs">
+              🪙
+            </div>
+            <div class="text-[11px] sm:text-xs font-semibold text-stone-700">
+              <span id="user-points" class="text-amber-600 font-bold">3,000</span> 원
+            </div>
+          </div>
+          <span id="pro-badge" class="hidden px-2 py-0.5 rounded-full bg-amber-400 text-stone-950 font-black text-[10px] shadow-sm">
+            PRO
+          </span>
+        </div>
+      </div>
+    </header>
+
+  <!-- 모바일 탭 바 -->
+  <div class="md:hidden flex border-b border-[#EFE8DC] bg-white text-[11px] font-bold text-center">
+    <button id="mob-upload" onclick="switchTab('upload')" class="flex-1 py-3 text-amber-700 border-b-2 border-amber-400">1. 리워드</button>
+    <button id="mob-admin" onclick="switchTab('admin')" class="flex-1 py-3 text-stone-500">2. 숏폼</button>
+    <button id="mob-motion" onclick="switchTab('motion')" class="flex-1 py-3 text-stone-500">3. 모션스왑</button>
+    <button id="mob-pricing" onclick="switchTab('pricing')" class="flex-1 py-3 text-stone-500">4. Pro</button>
+  </div>
+
+  <!-- 메인 컨텐츠 영역 -->
+  <main class="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 py-8">
+
+    <!-- ======================================================== -->
+    <!-- [탭 1] 유저 업로드 & Gemini 2중 검증 리워드 시스템 -->
+    <!-- ======================================================== -->
+    <section id="tab-upload" class="space-y-6">
+      <!-- 헤더 배너 -->
+      <div class="bg-amber-50/80 border border-amber-200/80 rounded-3xl p-5 sm:p-6 flex items-start gap-4 shadow-sm">
+        <div class="w-12 h-12 rounded-2xl bg-amber-200 text-amber-900 flex items-center justify-center text-2xl flex-shrink-0">
+          🎁
+        </div>
+        <div>
+          <h2 class="text-base font-bold text-stone-900 flex items-center gap-2 flex-wrap">
+            <span>방문 소스 등록하고 리워드 받기!</span>
+            <span class="text-[11px] bg-amber-200 text-amber-900 px-2.5 py-0.5 rounded-full font-extrabold border border-amber-300">
+              📸 사진 1장당 2원 + 🎬 영상 1개당 3원 즉시 지급
+            </span>
+          </h2>
+          <p class="text-xs text-stone-600 mt-1 leading-relaxed">
+            사장님께는 AI 숏폼 홍보 소스를, 유저에게는 쏠쏠한 현금성 리워드를! 영수증과 사진/영상을 올리면 Gemini AI가 유효성을 검증하고 등록된 수량만큼 리워드를 즉시 지급합니다.
+          </p>
+        </div>
+      </div>
+
+      <!-- 업로드 폼 -->
+      <div class="max-w-2xl mx-auto bg-white rounded-3xl p-6 sm:p-8 border border-stone-200 shadow-sm space-y-6">
+        <!-- 1. 장소명 -->
+        <div>
+          <label class="block text-sm font-bold text-stone-800 mb-1.5">
+            1. 방문한 장소명 <span class="text-amber-500">*</span>
+          </label>
+          <input
+            id="input-place"
+            type="text"
+            placeholder="예: 연남동 브루잉랩, 성수 버터베이커리"
+            value="연남동 감성 브루잉랩"
+            class="w-full px-4 py-3 rounded-2xl bg-stone-50 border border-stone-200 focus:bg-white focus:border-amber-400 focus:ring-2 focus:ring-amber-200 text-stone-800 text-sm outline-none transition-all font-medium"
+          />
+        </div>
+
+        <!-- 2. 1줄 리뷰 (둥글이 숏폼 & 모션스왑 반응 대본) -->
+        <div class="p-4 rounded-2xl bg-amber-50/70 border-2 border-amber-300 space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="text-sm font-black text-amber-950 flex items-center gap-1.5">
+              <span>🎤</span> 2. 둥글이 1줄 리뷰 (숏폼 & 모션스왑 리액션 대본) <span class="text-amber-600">*</span>
+            </label>
+            <span class="text-[10px] font-black text-amber-900 bg-amber-200 px-2 py-0.5 rounded-full border border-amber-300">
+              둥글이 음성 대본
+            </span>
+          </div>
+          <p class="text-[11px] text-amber-800 font-semibold leading-relaxed">
+            ★ 필수 입력: 숏폼과 모션스왑을 만들 때 둥글이가 <strong>귀여운 아기 목소리로 직접 말할 핵심 대본</strong>입니다!
+          </p>
+          <input
+            id="input-one-line-review"
+            type="text"
+            placeholder="예: 와! 여기 크림라떼 한 입 먹고 기절할 뻔했둥! 버터바 겉바속촉 미쳤다~ ✨"
+            value="와! 여기 크림라떼 한 입 먹고 기절할 뻔했둥! 버터바 겉바속촉 미쳤다~ ✨"
+            class="w-full px-4 py-3 rounded-2xl bg-white border border-amber-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 text-stone-900 text-sm font-bold outline-none transition-all placeholder:text-stone-400 shadow-2xs"
+          />
+        </div>
+
+        <!-- 3. 생생한 솔직 후기 (상세 리뷰) -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="block text-sm font-bold text-stone-800">
+              3. 생생한 솔직 후기 (상세 리뷰) <span class="text-amber-500">*</span>
+            </label>
+            <span class="text-[11px] text-stone-400 font-normal">숏폼 하단 설명 자막 연동</span>
+          </div>
+          <textarea
+            id="input-review"
+            rows="3"
+            placeholder="방문하신 장소의 분위기, 맛, 서비스 등에 대한 생생한 경험을 솔직하게 적어주세요."
+            class="w-full px-4 py-3 rounded-2xl bg-stone-50 border border-stone-200 focus:bg-white focus:border-amber-400 focus:ring-2 focus:ring-amber-200 text-stone-800 text-sm outline-none transition-all placeholder:text-stone-400"
+          >바닐라 빈을 직접 끓여 넣어서 크림이 진짜 부드럽고 묵직해요. 통창 채광도 너무 예뻐서 사진 찍기 최고였습니다!</textarea>
+        </div>
+
+        <!-- 3. 결제 영수증 업로드 칸 (단독 분리) -->
+        <div class="p-4 rounded-2xl bg-stone-50 border border-stone-200 space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="block text-sm font-bold text-stone-800">
+              3. 결제 영수증 첨부 <span class="text-amber-500">*</span>
+            </label>
+            <span class="text-[11px] text-amber-700 bg-amber-100/70 px-2 py-0.5 rounded-full font-semibold">
+              Gemini AI 필수 인증
+            </span>
+          </div>
+          <div class="relative border-2 border-dashed border-stone-200 hover:border-amber-400 bg-white rounded-2xl p-4 text-center min-h-[140px] flex flex-col items-center justify-center overflow-hidden transition-all">
+            <img id="preview-receipt" src="https://images.unsplash.com/photo-1554415707-9e4466b88588?w=800" alt="영수증 미리보기" class="w-full max-w-xs h-28 object-cover rounded-xl" />
+            <input type="file" accept="image/*" onchange="previewReceipt(this)" class="absolute inset-0 opacity-0 cursor-pointer" />
+          </div>
+          <p class="text-[11px] text-stone-500 text-center">🧾 상호명과 결제일자가 또렷하게 보이도록 찍은 사진을 등록해 주세요. (클릭하여 변경)</p>
+        </div>
+
+        <!-- 4 & 5. 사진 업로드 칸과 동영상 업로드 칸 분리 -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-2">
+          
+          <!-- [사진 업로드 칸] (장당 2원) -->
+          <div class="p-4 rounded-2xl bg-amber-50/50 border-2 border-amber-200/80 space-y-3 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-sm font-extrabold text-stone-900 flex items-center gap-1.5">
+                  <span>📸</span> 장소 사진
+                </span>
+                <span class="text-xs font-black text-amber-900 bg-amber-200 px-2.5 py-0.5 rounded-full shadow-xs">
+                  장당 +2원
+                </span>
+              </div>
+              <p class="text-[11px] text-stone-500">직접 촬영한 고해상도 장소 사진을 올려주세요. (여러 장 가능)</p>
+            </div>
+
+            <!-- 사진 미리보기 컨테이너 -->
+            <div id="photos-container" class="space-y-2">
+              <div class="relative border-2 border-dashed border-amber-300 hover:border-amber-500 bg-white rounded-xl p-3 text-center min-h-[130px] flex flex-col items-center justify-center overflow-hidden transition-all">
+                <img id="preview-photo-main" src="https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800" alt="장소 사진" class="w-full h-24 object-cover rounded-lg" />
+                <input type="file" id="input-photos" accept="image/*" multiple onchange="handlePhotosSelected(this)" class="absolute inset-0 opacity-0 cursor-pointer" />
+              </div>
+            </div>
+
+            <!-- 사진 수량 및 적립액 표시 -->
+            <div class="pt-2 border-t border-amber-200/60 flex items-center justify-between text-xs">
+              <span class="text-stone-600">등록된 사진: <strong id="photo-count" class="text-stone-900">1</strong>장</span>
+              <span class="font-extrabold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-lg">
+                +<span id="photo-reward">2</span>원 적립 예정
+              </span>
+            </div>
+          </div>
+
+          <!-- [동영상 업로드 칸] (개당 3원) -->
+          <div class="p-4 rounded-2xl bg-emerald-50/50 border-2 border-emerald-200/80 space-y-3 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-sm font-extrabold text-stone-900 flex items-center gap-1.5">
+                  <span>🎬</span> 장소 동영상
+                </span>
+                <span class="text-xs font-black text-emerald-900 bg-emerald-200 px-2.5 py-0.5 rounded-full shadow-xs">
+                  영상당 +3원
+                </span>
+              </div>
+              <p class="text-[11px] text-stone-500">현장의 분위기가 담긴 생생한 숏클립 영상을 올려주세요.</p>
+            </div>
+
+            <!-- 동영상 드래그앤드롭 & 미리보기 컨테이너 -->
+            <div id="videos-container" class="space-y-2">
+              <div
+                id="video-dropzone"
+                ondragover="handleVideoDragOver(event)"
+                ondragleave="handleVideoDragLeave(event)"
+                ondrop="handleVideoDropUpload(event)"
+                onclick="triggerVideoFileInput()"
+                class="relative border-2 border-dashed border-emerald-300 hover:border-emerald-500 bg-white rounded-xl p-3 text-center min-h-[140px] flex flex-col items-center justify-center cursor-pointer transition-all"
+              >
+                <!-- 영상 미선택 상태 -->
+                <div id="video-placeholder" class="flex flex-col items-center justify-center py-2 text-stone-500">
+                  <span class="text-3xl mb-1">📹</span>
+                  <span class="text-xs font-bold text-stone-800">클릭하거나 동영상을 끌어다 놓으세요</span>
+                  <span class="text-[10px] text-stone-400 mt-0.5">MP4, MOV, WebM 지원 (개당 3원)</span>
+                </div>
+
+                <!-- 영상 선택 후 미리보기 상태 -->
+                <div id="video-preview-wrapper" class="hidden w-full flex-col items-center space-y-2">
+                  <video id="preview-video-main" class="w-full h-28 object-cover rounded-lg shadow-xs" autoplay loop muted playsinline></video>
+                  <div class="flex items-center justify-between w-full px-1 text-[11px]">
+                    <span id="video-file-info" class="text-emerald-700 font-bold truncate max-w-[150px]">video.mp4</span>
+                    <button type="button" onclick="removeSelectedVideo(event)" class="text-rose-500 hover:text-rose-700 font-bold underline">삭제</button>
+                  </div>
+                </div>
+
+                <input type="file" id="input-videos" accept="video/*,video/mp4,video/quicktime,video/webm" onchange="handleVideosSelected(this)" class="hidden" />
+              </div>
+            </div>
+
+            <!-- 동영상 수량 및 적립액 표시 -->
+            <div class="pt-2 border-t border-emerald-200/60 flex items-center justify-between text-xs">
+              <span class="text-stone-600">등록된 영상: <strong id="video-count" class="text-stone-900">0</strong>개</span>
+              <span class="font-extrabold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-lg">
+                +<span id="video-reward">0</span>원 적립 예정
+              </span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 실시간 합산 리워드 정산 배너 -->
+        <div class="p-4 rounded-2xl bg-amber-100/70 border-2 border-amber-300 flex items-center justify-between text-stone-900 shadow-sm">
+          <div class="flex items-center gap-2">
+            <span class="text-2xl">💰</span>
+            <div>
+              <div class="text-xs font-bold text-stone-600">이번 업로드로 획득할 예상 리워드:</div>
+              <div class="text-[11px] text-stone-500">
+                사진 <span id="summary-photo-count">1</span>장(×2원) + 동영상 <span id="summary-video-count">0</span>개(×3원)
+              </div>
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="text-xl sm:text-2xl font-black text-amber-900">
+              총 <span id="total-expected-reward" class="underline decoration-amber-400 decoration-4">2</span>원
+            </div>
+          </div>
+        </div>
+
+        <!-- 동의 체크박스 -->
+        <label class="flex items-start gap-3 p-3.5 bg-amber-50/50 border border-amber-200/60 rounded-2xl cursor-pointer hover:bg-amber-50 transition-colors">
+          <input id="input-consent" type="checkbox" checked class="mt-0.5 w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-stone-300">
+          <div class="text-xs text-stone-700 leading-snug">
+            <span class="font-bold text-stone-900">[필수] 콘텐츠 2차 활용 및 AI 가상 체험 동의</span>
+            <p class="text-stone-500 mt-0.5">
+              제공해주신 사진/영상은 캐릭터 '둥글이'의 AI 체험형 숏폼 영상 배경으로 재가공되어 방송국에 송출될 수 있음에 동의합니다.
+            </p>
+          </div>
+        </label>
+
+        <!-- 진행 상태 알림 상자 -->
+        <div id="verify-status-box" class="hidden p-4 rounded-2xl bg-amber-50 border border-amber-300 text-xs text-amber-900 space-y-1">
+          <div class="flex items-center gap-2 font-bold">
+            <span class="inline-block animate-spin text-sm">⏳</span>
+            <span id="verify-status-title">Gemini Vision 2중 검증 시스템 가동 중...</span>
+          </div>
+          <p id="verify-status-desc" class="text-[11px] text-amber-800">영수증 상호명 판독 및 원본 촬영 여부를 분석 중입니다.</p>
+        </div>
+
+        <!-- 최종 성공/실패 결과 상자 -->
+        <div id="verify-result-box" class="hidden p-5 rounded-2xl border text-xs bg-emerald-50 border-emerald-300 text-emerald-900 space-y-2">
+          <div class="flex items-center gap-2 font-bold text-sm">
+            <span>✅</span>
+            <span>Gemini 2중 인증 완료! 리워드 (+<span id="result-awarded-reward">2</span>원) 즉시 지급 성공</span>
+          </div>
+          <p class="text-xs text-stone-600" id="result-desc">
+            영수증 상호명(브루잉랩) 및 최근 결제일자 확인 완료! 직접 찍은 원본 소스로 판정되어 리워드가 즉시 계정에 적립되었습니다.
+          </p>
+          <div class="pt-2 border-t border-emerald-200/60 flex flex-wrap gap-2 text-[11px]">
+            <span class="bg-white/80 px-2 py-1 rounded-lg">🧾 영수증: 정상 전표 (신뢰도 98%)</span>
+            <span class="bg-white/80 px-2 py-1 rounded-lg">📸 사진 <span id="res-photo-cnt">1</span>장: 각 2원 적립</span>
+            <span class="bg-white/80 px-2 py-1 rounded-lg">🎬 영상 <span id="res-video-cnt">0</span>개: 각 3원 적립</span>
+          </div>
+        </div>
+
+        <!-- 제출 버튼 -->
+        <button
+          id="btn-submit-upload"
+          onclick="handleUploadSubmit()"
+          class="w-full py-4 rounded-2xl bg-amber-400 hover:bg-amber-300 active:bg-amber-500 font-bold text-stone-900 shadow-sm transition-all flex items-center justify-center gap-2 text-sm"
+        >
+          <span>✨</span>
+          <span>2중 인증 제출하고 <span id="btn-submit-reward-amount">2</span>원 받기</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- [탭 2] 관리자 대시보드 & AI 체험 숏폼 렌더링 -->
+    <!-- ======================================================== -->
+    <section id="tab-admin" class="hidden space-y-6">
+      <div class="bg-white rounded-3xl p-6 border border-stone-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="p-2 bg-amber-100 rounded-xl text-amber-800 text-lg">🎬</span>
+            <h2 class="text-lg font-black text-stone-900">
+              인증 승인된 장소 갤러리
+            </h2>
+          </div>
+          <p class="text-xs text-stone-500 mt-1">
+            Gemini 2중 인증(영수증+원본사진)을 통과한 유저 소스를 둥글이 AI 숏폼으로 즉시 렌더링하세요.
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold">
+            FFmpeg 9:16 합성 엔진 준비됨
+          </span>
+        </div>
+      </div>
+
+      <!-- 갤러리 카드 그리드 -->
+      <div id="gallery-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+        <!-- 카드 1 -->
+        <div class="bg-white rounded-3xl overflow-hidden border border-stone-200 shadow-sm flex flex-col">
+          <div class="relative aspect-video w-full bg-stone-100 overflow-hidden">
+            <img src="https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800" alt="브루잉랩" class="w-full h-full object-cover">
+            <div class="absolute top-3 left-3 bg-stone-900/80 backdrop-blur-sm text-white px-2.5 py-1 rounded-full text-[10px] font-bold">
+              ✓ Gemini 2중 인증 완료
+            </div>
+          </div>
+          <div class="p-5 flex-1 flex flex-col justify-between space-y-4">
+            <div>
+              <h3 class="font-extrabold text-stone-900 text-base">연남동 감성 브루잉랩</h3>
+              <p class="text-xs text-stone-600 mt-2 line-clamp-2 bg-stone-50 p-2.5 rounded-2xl border border-stone-100">
+                "바닐라 빈을 직접 끓여 넣어서 크림이 진짜 부드럽고 묵직해요. 사진 찍기 최고!"
+              </p>
+            </div>
+            <div class="pt-2 border-t border-stone-100">
+              <button
+                id="btn-render-1"
+                onclick="triggerRender('1', '연남동 브루잉랩', '와! 맛있겠다! 둥글이 출동~', '바닐라 크림라떼 비주얼 대박!')"
+                class="w-full py-3.5 px-4 rounded-2xl bg-amber-400 hover:bg-amber-300 text-stone-900 font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all"
+              >
+                <span>🏃</span> [둥글이 '와! 맛있겠다!' 숏폼 만들기]
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 카드 2 -->
+        <div class="bg-white rounded-3xl overflow-hidden border border-stone-200 shadow-sm flex flex-col">
+          <div class="relative aspect-video w-full bg-stone-100 overflow-hidden">
+            <img src="https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800" alt="버터베이커리" class="w-full h-full object-cover">
+            <div class="absolute top-3 left-3 bg-stone-900/80 backdrop-blur-sm text-white px-2.5 py-1 rounded-full text-[10px] font-bold">
+              ✓ Gemini 2중 인증 완료
+            </div>
+          </div>
+          <div class="p-5 flex-1 flex flex-col justify-between space-y-4">
+            <div>
+              <h3 class="font-extrabold text-stone-900 text-base">성수 버터베이커리 팩토리</h3>
+              <p class="text-xs text-stone-600 mt-2 line-clamp-2 bg-stone-50 p-2.5 rounded-2xl border border-stone-100">
+                "줄 서서 먹는 솔티드 버터바! 겉은 바삭하고 속은 쫀득한 풍미가 가득합니다."
+              </p>
+            </div>
+            <div class="pt-2 border-t border-stone-100">
+              <button
+                id="btn-render-2"
+                onclick="triggerRender('2', '성수 버터베이커리', '와! 맛있겠다! 솔티드 버터바 발견했둥!', '겉바속쫀 버터 풍미 한 입에 기절각!')"
+                class="w-full py-3.5 px-4 rounded-2xl bg-amber-400 hover:bg-amber-300 text-stone-900 font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all"
+              >
+                <span>🏃</span> [둥글이 '와! 맛있겠다!' 숏폼 만들기]
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 카드 3 -->
+        <div class="bg-white rounded-3xl overflow-hidden border border-stone-200 shadow-sm flex flex-col">
+          <div class="relative aspect-video w-full bg-stone-100 overflow-hidden">
+            <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800" alt="플라워 테라스" class="w-full h-full object-cover">
+            <div class="absolute top-3 left-3 bg-stone-900/80 backdrop-blur-sm text-white px-2.5 py-1 rounded-full text-[10px] font-bold">
+              ✓ Gemini 2중 인증 완료
+            </div>
+          </div>
+          <div class="p-5 flex-1 flex flex-col justify-between space-y-4">
+            <div>
+              <h3 class="font-extrabold text-stone-900 text-base">망원 앤틱 앤 플라워 테라스</h3>
+              <p class="text-xs text-stone-600 mt-2 line-clamp-2 bg-stone-50 p-2.5 rounded-2xl border border-stone-100">
+                "테라스에 생화가 가득해서 유럽 정원에 온 것 같아요. 햇살 들어올 때 인생샷!"
+              </p>
+            </div>
+            <div class="pt-2 border-t border-stone-100">
+              <button
+                id="btn-render-3"
+                onclick="triggerRender('3', '망원 플라워 테라스', '와! 맛있겠다! 유럽 감성 디저트 정원!', '둥글이가 추천하는 햇살 맛집~')"
+                class="w-full py-3.5 px-4 rounded-2xl bg-amber-400 hover:bg-amber-300 text-stone-900 font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all"
+              >
+                <span>🏃</span> [둥글이 '와! 맛있겠다!' 숏폼 만들기]
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- [탭 3] AI 모션 스왑 및 템플릿 자동화 스튜디오 -->
+    <!-- ======================================================== -->
+    <section id="tab-motion" class="hidden space-y-6">
+      <div class="bg-amber-50/80 border border-amber-200/80 rounded-3xl p-5 sm:p-6 flex items-start gap-4 shadow-sm">
+        <div class="w-12 h-12 rounded-2xl bg-amber-200 text-amber-900 flex items-center justify-center text-2xl flex-shrink-0">
+          🪄
+        </div>
+        <div>
+          <h2 class="text-base font-bold text-stone-900 flex items-center gap-2 flex-wrap">
+            <span>AI 모션 스왑 & 숏폼 자동화 엔진</span>
+            <span class="text-[11px] bg-amber-200 text-amber-900 px-2.5 py-0.5 rounded-full font-bold border border-amber-300">
+              Replicate AnimateAnyone + FFmpeg 오버레이
+            </span>
+          </h2>
+          <p class="text-xs text-stone-600 mt-1 leading-relaxed">
+            내 캐릭터나 사진을 원본 숏폼 영상의 모션 뼈대와 타이밍에 맞춰 자연스럽게 춤추게 만듭니다. 시선을 사로잡는 3초 훅 텍스트가 자동으로 상단에 자막으로 오버레이됩니다.
+          </p>
+        </div>
+      </div>
+
+      <!-- 입력 폼 -->
+      <div id="motion-form-container" class="max-w-2xl mx-auto bg-white rounded-3xl p-6 sm:p-8 border border-stone-200 shadow-sm space-y-6">
+        
+        <!-- 1. 캐릭터 이미지 Drag & Drop -->
+        <div class="space-y-2">
+          <label class="text-sm font-extrabold text-stone-900 flex items-center justify-between">
+            <span class="flex items-center gap-1.5">
+              <span class="w-5 h-5 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center text-xs">1</span>
+              합성할 캐릭터 또는 인물 사진 (Drag & Drop)
+            </span>
+            <span class="text-xs text-stone-400 font-normal">전신 또는 상반신 권장</span>
+          </label>
+          <div
+            id="motion-image-dropzone"
+            ondragover="handleMotionDragOver(event)"
+            ondragleave="handleMotionDragLeave(event)"
+            ondrop="handleMotionDrop(event)"
+            onclick="document.getElementById('motion-image-input').click()"
+            class="relative border-2 border-dashed border-amber-300 hover:border-amber-500 bg-stone-50/60 rounded-2xl p-5 text-center cursor-pointer transition-all min-h-[150px] flex flex-col items-center justify-center overflow-hidden"
+          >
+            <div class="flex items-center gap-4">
+              <img id="motion-preview-img" src="assets/doongle_front.png" onerror="if(window.DOONGLE_FRONT_BASE64) this.src=window.DOONGLE_FRONT_BASE64;" alt="캐릭터 미리보기" class="w-20 h-20 object-contain rounded-xl border border-amber-200 shadow-sm" />
+              <div class="text-left">
+                <span class="text-xs font-bold text-stone-800 block">둥글이 캐릭터 기본 탑재됨</span>
+                <span class="text-[11px] text-stone-500">클릭하거나 다른 사진을 끌어다 놓아 변경할 수 있습니다.</span>
+              </div>
+            </div>
+            <input id="motion-image-input" type="file" accept="image/*" onchange="handleMotionImageChange(this)" class="hidden" />
+          </div>
+        </div>
+
+        <!-- 2. 참고 모션 영상 프리셋 선택 또는 파일 첨부 -->
+        <div class="space-y-3">
+          <label class="text-sm font-extrabold text-stone-900 flex items-center justify-between">
+            <span class="flex items-center gap-1.5">
+              <span class="w-5 h-5 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center text-xs">2</span>
+              따라할 모션 숏폼 템플릿 선택 (또는 영상 업로드)
+            </span>
+            <span class="text-xs text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full font-bold">
+              모션 뼈대 추적
+            </span>
+          </label>
+
+          <!-- 프리셋 4종 -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-left">
+            <div onclick="selectMotionPreset('dance', '이 댄스 챌린지 둥글이가 완벽 접수했둥! ✨')" id="preset-dance" class="border-2 border-amber-400 bg-amber-50/80 rounded-2xl p-2.5 cursor-pointer transition-all">
+              <div class="aspect-video w-full rounded-lg overflow-hidden mb-1.5 bg-stone-200">
+                <img src="https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=400" alt="댄스" class="w-full h-full object-cover">
+              </div>
+              <div class="text-[11px] font-black text-stone-900 truncate">🔥 댄스 챌린지</div>
+              <div class="text-[10px] text-stone-500">5초 바이럴 안무</div>
+            </div>
+
+            <div onclick="selectMotionPreset('cute', '안녕! 오늘 소개할 대박 핫플은 어디게? 💖')" id="preset-cute" class="border-2 border-stone-200 hover:border-amber-300 bg-white rounded-2xl p-2.5 cursor-pointer transition-all">
+              <div class="aspect-video w-full rounded-lg overflow-hidden mb-1.5 bg-stone-200">
+                <img src="https://images.unsplash.com/photo-1543332164-6e82f355badc?w=400" alt="인사" class="w-full h-full object-cover">
+              </div>
+              <div class="text-[11px] font-black text-stone-900 truncate">👶 둥글이 인사</div>
+              <div class="text-[10px] text-stone-500">살랑살랑 리액션</div>
+            </div>
+
+            <div onclick="selectMotionPreset('mukbang', '한 입 먹자마자 기절각! 여긴 진짜 찐이야~ 🥐')" id="preset-mukbang" class="border-2 border-stone-200 hover:border-amber-300 bg-white rounded-2xl p-2.5 cursor-pointer transition-all">
+              <div class="aspect-video w-full rounded-lg overflow-hidden mb-1.5 bg-stone-200">
+                <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400" alt="먹방" class="w-full h-full object-cover">
+              </div>
+              <div class="text-[11px] font-black text-stone-900 truncate">🍰 감탄 먹방</div>
+              <div class="text-[10px] text-stone-500">동공지진 리액션</div>
+            </div>
+
+            <div onclick="selectMotionPreset('tour', '사장님도 몰래 숨겨둔 우리 가게 비밀 스팟 공개! 🚪')" id="preset-tour" class="border-2 border-stone-200 hover:border-amber-300 bg-white rounded-2xl p-2.5 cursor-pointer transition-all">
+              <div class="aspect-video w-full rounded-lg overflow-hidden mb-1.5 bg-stone-200">
+                <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400" alt="투어" class="w-full h-full object-cover">
+              </div>
+              <div class="text-[11px] font-black text-stone-900 truncate">🚶 공간 워킹</div>
+              <div class="text-[10px] text-stone-500">손짓 인트로 안내</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. 3초 훅 텍스트 입력 -->
+        <div class="space-y-1.5">
+          <label class="text-sm font-extrabold text-stone-900 flex items-center justify-between">
+            <span class="flex items-center gap-1.5">
+              <span class="w-5 h-5 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center text-xs">3</span>
+              영상 상단에 얹을 3초 훅 텍스트 (FFmpeg 오버레이)
+            </span>
+          </label>
+          <div class="relative">
+            <input
+              id="motion-hook-input"
+              type="text"
+              value="이 댄스 챌린지 둥글이가 완벽 접수했둥! ✨"
+              class="w-full px-4 py-3 rounded-2xl bg-stone-50 border border-stone-200 focus:bg-white focus:border-amber-400 focus:ring-2 focus:ring-amber-200 text-stone-800 text-sm font-semibold outline-none transition-all"
+            />
+          </div>
+        </div>
+
+        <!-- 렌더링 진행 알림 -->
+        <div id="motion-render-status" class="hidden p-4 rounded-2xl bg-amber-50 border border-amber-300 text-xs text-amber-900 space-y-1 animate-pulse">
+          <div class="flex items-center gap-2 font-bold">
+            <span class="animate-spin text-sm">⏳</span>
+            <span id="motion-render-title">Replicate 모션 스왑 파이프라인 가동 중...</span>
+          </div>
+          <p id="motion-render-desc" class="text-[11px] text-amber-800">원본 영상의 뼈대와 타이밍을 추적하여 캐릭터에 모션을 전이하고 있습니다.</p>
+        </div>
+
+        <!-- 렌더링 시작 버튼 -->
+        <button
+          id="btn-motion-start"
+          onclick="startMotionSwapRender()"
+          class="w-full py-4 rounded-2xl bg-amber-400 hover:bg-amber-300 active:bg-amber-500 font-black text-stone-950 text-sm flex items-center justify-center gap-2 shadow-sm transition-all"
+        >
+          <span>✨</span> AI 모션 스왑 & 3초 훅 숏폼 렌더링 시작하기
+        </button>
+      </div>
+
+      <!-- 4. 결과물 뷰어 컴포넌트 (초기 hidden) -->
+      <div id="motion-result-viewer" class="hidden max-w-2xl mx-auto bg-white rounded-3xl p-6 sm:p-8 border-2 border-emerald-300 shadow-md space-y-6">
+        <div class="flex items-center justify-between pb-3 border-b border-stone-100">
+          <div>
+            <h3 class="text-base font-black text-stone-900 flex items-center gap-2">
+              <span class="text-emerald-600">✓</span> 9:16 모션 스왑 숏폼 완성!
+            </h3>
+            <p class="text-xs text-stone-500">Replicate 모션 뼈대 전이 + 둥글이 공식 목소리 훅 텍스트 합성 완료</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="speakCurrentMotionHook()" class="px-3 py-1.5 rounded-xl bg-amber-200/90 hover:bg-amber-300 text-stone-900 font-extrabold text-xs flex items-center gap-1 shadow-2xs transition-colors" title="둥글이 목소리로 대본 듣기">
+              <span>📢</span> 둥글이 목소리
+            </button>
+            <button onclick="resetMotionSwap()" class="text-xs font-bold text-stone-500 hover:text-stone-800 bg-stone-100 px-3 py-1.5 rounded-xl transition-colors">
+              새로 만들기
+            </button>
+          </div>
+        </div>
+
+        <!-- 9:16 비디오 뷰어 -->
+        <div class="flex justify-center">
+          <div class="relative bg-stone-950 aspect-[9/16] w-full max-w-[280px] rounded-3xl overflow-hidden shadow-2xl border-4 border-stone-800">
+            <!-- 시뮬레이션 모션 스왑 배경 (역동적인 챌린지 모션 클립) -->
+            <img src="https://images.unsplash.com/photo-1543332164-6e82f355badc?w=600" alt="모션 스왑 캐릭터" class="kenburns-bg w-full h-full object-cover">
+            
+            <!-- 상단 3초 훅 자막 배너 -->
+            <div class="absolute top-5 inset-x-3 flex justify-center pointer-events-none">
+              <span id="motion-viewer-hook-text" class="px-3 py-1.5 rounded-xl bg-amber-300 text-stone-950 font-black text-xs shadow-lg border border-amber-400 text-center animate-pulse">
+                이 댄스 챌린지 둥글이가 완벽 접수했둥! ✨
+              </span>
+            </div>
+
+            <!-- 센터 모션 캐릭터 리액션 오버레이 -->
+            <div class="absolute bottom-14 inset-x-0 flex flex-col items-center pointer-events-none doongle-running">
+              <img
+                id="motion-doongle-character"
+                src="assets/doongle_front.png"
+                onerror="if(window.DOONGLE_FRONT_BASE64) this.src=window.DOONGLE_FRONT_BASE64;"
+                alt="둥글이 모션 캐릭터"
+                class="w-32 h-auto drop-shadow-[0_15px_15px_rgba(0,0,0,0.6)] object-contain"
+              />
+              <span class="mt-1 bg-stone-900/80 text-amber-300 text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-amber-300/40">
+                모션 뼈대 싱크 100% ✨
+              </span>
+            </div>
+
+            <!-- 규격 배지 -->
+            <div class="absolute bottom-3 left-3 bg-stone-900/80 text-stone-300 text-[10px] px-2 py-0.5 rounded-full">
+              9:16 Full HD
+            </div>
+          </div>
+        </div>
+
+        <!-- 액션 버튼 -->
+        <div class="space-y-2 pt-2">
+          <button onclick="alert('모션 스왑 숏폼 MP4 다운로드가 시작되었습니다!')" class="w-full py-3.5 rounded-2xl bg-amber-400 hover:bg-amber-300 font-black text-stone-950 text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm">
+            <span>📥</span> 9:16 숏폼 MP4 다운로드
+          </button>
+          <button onclick="navigator.clipboard.writeText(window.location.href); alert('숏폼 공유 링크가 복사되었습니다!');" class="w-full py-3 rounded-2xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs flex items-center justify-center gap-1.5">
+            <span>🔗</span> 링크 복사 및 SNS 공유하기
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- [탭 3] 사장님 Pro 구독 (월 9,900원) -->
+    <!-- ======================================================== -->
+    <section id="tab-pricing" class="hidden space-y-8">
+      <div class="text-center space-y-3">
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold">
+          <span>👑</span> 오프라인 매장 사장님 전용 플랜
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-black text-stone-900">
+          월 9,900원으로 운영하는 우리 매장 전용 1인 AI 방송국
+        </h1>
+        <p class="text-xs sm:text-sm text-stone-600 max-w-xl mx-auto leading-relaxed">
+          손님들이 올린 생생한 인증 사진과 영수증에 둥글이 캐릭터를 합성해, 릴스와 쇼츠에서 터지는 바이럴 영상을 1초 만에 만들어보세요!
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch max-w-4xl mx-auto">
+        <!-- 무료 플랜 -->
+        <div class="bg-white rounded-3xl p-6 sm:p-8 border border-stone-200 shadow-sm flex flex-col justify-between">
+          <div class="space-y-4">
+            <div>
+              <span class="text-xs font-bold text-stone-400 uppercase tracking-wider">Free Starter</span>
+              <h3 class="text-xl font-black text-stone-800 mt-1">일반 탐험가 (체험)</h3>
+              <p class="text-xs text-stone-500 mt-1">방문 인증 리워드 수령 및 숏폼 1회 맛보기</p>
+            </div>
+            <div class="text-stone-900 flex items-baseline gap-1 py-2">
+              <span class="text-3xl font-black">0</span>
+              <span class="text-sm font-bold text-stone-500">원 / 평생 무료</span>
+            </div>
+            <ul class="space-y-2.5 text-xs text-stone-600 pt-2 border-t border-stone-100">
+              <li class="flex items-center gap-2">✓ 장소 방문 사진 & 영수증 2중 인증 및 리워드 수령</li>
+              <li class="flex items-center gap-2">✓ 인증 통과 시 건당 1,000P 즉시 적립</li>
+              <li class="flex items-center gap-2 text-stone-400">✕ 숏폼 렌더링 1회 시연 한정</li>
+            </ul>
+          </div>
+          <div class="pt-6">
+            <button onclick="switchTab('upload')" class="w-full py-3.5 rounded-2xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs transition-colors">
+              장소 인증하고 리워드 받기
+            </button>
+          </div>
+        </div>
+
+        <!-- Pro 사장님 구독 플랜 -->
+        <div class="bg-amber-50/70 rounded-3xl p-6 sm:p-8 border-2 border-amber-300 shadow-lg flex flex-col justify-between relative overflow-hidden">
+          <div class="absolute top-0 right-0 bg-amber-400 text-stone-950 font-black text-[11px] px-4 py-1.5 rounded-bl-2xl shadow-sm">
+            BEST 사장님 PICK
+          </div>
+          <div class="space-y-4">
+            <div>
+              <span class="text-xs font-bold text-amber-700 uppercase tracking-wider flex items-center gap-1">
+                <span>✨</span> All-In-One Pro Pass
+              </span>
+              <h3 class="text-xl font-black text-stone-900 mt-1">둥글이 방송국 Pro</h3>
+              <p class="text-xs text-stone-600 mt-1">매출을 극대화하는 바이럴 숏폼 무제한 제작</p>
+            </div>
+            <div class="text-stone-900 flex items-baseline gap-1 py-2">
+              <span class="text-4xl font-black text-stone-950">9,900</span>
+              <span class="text-sm font-bold text-stone-600">원 / 월 (정기구독)</span>
+            </div>
+            <ul class="space-y-2.5 text-xs text-stone-700 pt-2 border-t border-amber-200/80">
+              <li class="flex items-center gap-2">✓ 둥글이 AI 가상체험 숏폼 무제한 렌더링 (9:16 Full HD)</li>
+              <li class="flex items-center gap-2">✓ Gemini 1.5 기반 3초 후킹 대본 & 자막 자동 생성</li>
+              <li class="flex items-center gap-2">✓ 인스타그램 릴스 & 유튜브 쇼츠용 MP4 즉시 다운로드</li>
+              <li class="flex items-center gap-2">✓ 사장님 공식 SNS 마케팅 2차 가공 상업적 라이선스 제공</li>
+            </ul>
+          </div>
+          <div class="pt-6">
+            <button
+              id="btn-stripe-subscribe"
+              onclick="handleStripeSubscribe()"
+              class="w-full py-4 rounded-2xl bg-amber-400 hover:bg-amber-300 active:bg-amber-500 text-stone-950 font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm transition-all"
+            >
+              <span>💳</span> 월 9,900원으로 Pro 무제한 렌더링 시작
+            </button>
+            <p class="text-[11px] text-stone-500 text-center mt-2">
+              🔒 Stripe 256비트 암호화 결제 · 언제든지 1초 만에 해지 가능
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ======================================================== -->
+  <!-- 9:16 숏폼 비디오 플레이어 모달 (Ken Burns + 둥글이 크로마키) -->
+  <!-- ======================================================== -->
+  <div id="video-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="relative bg-white rounded-3xl max-w-sm w-full overflow-hidden shadow-2xl border border-stone-200">
+      <!-- 상단 헤더 -->
+      <div class="p-4 bg-stone-50 border-b border-stone-100 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-full overflow-hidden border border-amber-300 bg-amber-100 flex-shrink-0">
+            <img src="assets/doongle_face.png" onerror="if(window.DOONGLE_FACE_BASE64) this.src=window.DOONGLE_FACE_BASE64;" alt="둥글이" class="w-full h-full object-cover" />
+          </div>
+          <div>
+            <h3 id="modal-place-title" class="text-sm font-bold text-stone-900 leading-snug">연남동 브루잉랩</h3>
+            <p class="text-[10px] text-amber-700 font-bold flex items-center gap-1">
+              <span>🔊</span> 둥글이 공식 목소리 대본 리액션 탑재
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <button onclick="speakDoongleVoice('profile')" class="p-1.5 px-2.5 bg-amber-200 hover:bg-amber-300 text-stone-900 rounded-xl text-[10px] font-black flex items-center gap-1 transition-colors shadow-2xs border border-amber-300" title="프로필의 실제 목소리로만 듣기">
+            <span>👶</span> 프로필 목소리
+          </button>
+          <button onclick="speakDoongleVoice('tts')" class="p-1.5 px-2 bg-stone-100 hover:bg-amber-100 text-stone-700 rounded-xl text-[10px] font-bold flex items-center gap-1 transition-colors border border-stone-200" title="대본 AI 낭독 듣기">
+            <span>🎤</span> 대본 낭독
+          </button>
+          <button onclick="closeVideoModal()" class="w-7 h-7 rounded-full bg-stone-200 hover:bg-stone-300 flex items-center justify-center text-stone-700 text-xs font-bold transition-colors">
+            ✕
+          </button>
+        </div>
+      </div>
+
+      <!-- 9:16 비디오 뷰포트 (Ken Burns 줌인 + 둥글이 크로마키 애니메이션) -->
+      <div class="relative bg-stone-900 aspect-[9/16] w-full max-h-[480px] overflow-hidden flex items-center justify-center">
+        <!-- 1. 배경: Ken Burns 서서히 줌인되는 유저 사진 -->
+        <img id="modal-bg-img" src="https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=1080" alt="장소 배경" class="kenburns-bg absolute inset-0 w-full h-full object-cover">
+        
+        <!-- 1-2. 배경: 유저가 등록한 실제 동영상 (동영상 업로드 시 우선 자동재생) -->
+        <video id="modal-bg-video" autoplay loop muted playsinline class="absolute inset-0 w-full h-full object-cover hidden"></video>
+        
+        <!-- 2. 어두운 비네팅 그라데이션 (자막 가독성 확보) -->
+        <div class="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/70 pointer-events-none"></div>
+
+        <!-- 3. 상단: 유저가 남긴 1줄 리뷰 (둥글이 리액션 대본 자막 배너) -->
+        <div class="absolute top-5 inset-x-3 flex justify-center pointer-events-none">
+          <span id="modal-hook-line" class="px-3.5 py-1.5 rounded-xl bg-amber-300 text-stone-950 font-black text-xs shadow-lg border border-amber-400 text-center max-w-[280px] truncate">
+            연남동 숨은 버터바 성지 발견했둥!
+          </span>
+        </div>
+
+        <!-- 4. 캐릭터: 크로마키 투명화된 실제 '둥글이' (20% 축소 + 바닥 안정감 하향 배치) -->
+        <div class="absolute bottom-4 inset-x-0 flex flex-col items-center pointer-events-none doongle-running">
+          <div class="relative flex flex-col items-center">
+            <!-- 둥글이 머리 위 1줄 리뷰 반응 톡톡 말풍선 -->
+            <div class="shout-bubble mb-0.5 bg-white text-stone-950 font-black text-[11px] px-3 py-1 rounded-full shadow-2xl border-2 border-amber-300 flex items-center gap-1.5 max-w-[280px]">
+              <span id="modal-shout-text" class="truncate">와! 맛있겠다!</span>
+              <span class="text-amber-500 flex-shrink-0">😋✨</span>
+            </div>
+            <!-- 크로마키 투명 제거된 실제 둥글이 캐릭터 (20% 축소: w-[115px]) -->
+            <img
+              id="modal-doongle-character"
+              src="assets/doongle_front.png"
+              onerror="if(window.DOONGLE_FRONT_BASE64) this.src=window.DOONGLE_FRONT_BASE64;"
+              alt="둥글이 캐릭터"
+              class="w-[115px] h-auto drop-shadow-[0_12px_12px_rgba(0,0,0,0.55)] object-contain"
+            />
+          </div>
+        </div>
+
+        <!-- 5. 하단: 생생한 상세 솔직 후기 자막 -->
+        <div class="absolute bottom-5 inset-x-4 flex justify-center pointer-events-none">
+          <span id="modal-body-line" class="px-3 py-1.5 rounded-xl bg-stone-950/80 text-white font-semibold text-[11px] shadow-lg text-center backdrop-blur-sm border border-stone-800 line-clamp-2">
+            겉바속촉 디저트와 인생샷 보장!
+          </span>
+        </div>
+      </div>
+
+      <!-- 하단 다운로드 및 공유 -->
+      <div class="p-4 bg-stone-50 space-y-2">
+        <button onclick="downloadShortForm()" class="w-full py-3 bg-amber-400 hover:bg-amber-300 active:bg-amber-500 text-stone-900 font-bold rounded-2xl flex items-center justify-center gap-2 text-xs shadow-sm transition-colors">
+          <span>📥</span> 9:16 숏폼 MP4 다운로드
+        </button>
+        <p class="text-[10px] text-stone-500 text-center">인스타그램 릴스 & 유튜브 쇼츠에 바로 업로드 가능한 세로 규격입니다.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- 둥글이 마크 클릭 시 열리는 미니 동영상 플레이어 팝업 (작은 화면) -->
+  <!-- ======================================================== -->
+  <div
+    id="doongle-mini-player-modal"
+    class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs hidden items-center justify-center p-4 transition-all"
+    onclick="handleMiniPlayerBackdropClick(event)"
+  >
+    <div
+      id="doongle-mini-card"
+      class="relative bg-white rounded-3xl max-w-[340px] w-full overflow-hidden shadow-2xl border-2 border-amber-300 ring-4 ring-amber-100"
+      onclick="event.stopPropagation()"
+    >
+      <!-- 미니 플레이어 헤더 -->
+      <div class="p-3.5 bg-gradient-to-r from-amber-100 via-amber-50 to-stone-50 border-b border-amber-200/80 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-full bg-amber-300 border border-amber-400 overflow-hidden flex-shrink-0 shadow-xs">
+            <img src="assets/doongle_face.png" onerror="if(window.DOONGLE_FACE_BASE64) this.src=window.DOONGLE_FACE_BASE64;" alt="둥글이" class="w-full h-full object-cover">
+          </div>
+          <div>
+            <h4 class="text-xs font-black text-stone-900 flex items-center gap-1">
+              <span>👶 둥글이 공식 영상</span>
+              <span class="text-[9px] bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded-full font-bold">Kling AI</span>
+            </h4>
+            <p class="text-[10px] text-amber-800 font-bold">귀여운 목소리로 인사하는 둥글이 ✨</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onclick="closeDoongleMiniPlayer()"
+          class="w-7 h-7 rounded-full bg-stone-200 hover:bg-stone-300 text-stone-700 flex items-center justify-center text-xs font-bold transition-colors"
+          title="닫기"
+        >
+          ✕
+        </button>
+      </div>
+
+      <!-- 동영상 재생 뷰포트 (작은 화면) -->
+      <div class="relative bg-stone-950 aspect-[9/16] max-h-[460px] w-full overflow-hidden flex items-center justify-center">
+        <video
+          id="doongle-clip-video"
+          src="assets/doongle_video.mp4"
+          playsinline
+          controls
+          class="w-full h-full object-cover"
+        ></video>
+      </div>
+
+      <!-- 미니 플레이어 푸터 컨트롤 -->
+      <div class="p-3 bg-stone-50 border-t border-stone-100 flex items-center justify-between text-xs">
+        <button
+          type="button"
+          onclick="replayDoongleClip()"
+          class="px-3 py-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold text-[11px] flex items-center gap-1 transition-colors"
+        >
+          <span>🔄</span> 처음부터 다시보기
+        </button>
+        <button
+          type="button"
+          onclick="closeDoongleMiniPlayer()"
+          class="px-3.5 py-1.5 rounded-xl bg-stone-200 hover:bg-stone-300 text-stone-800 font-bold text-[11px] transition-colors"
+        >
+          닫기
+        </button>
+      </div>
+    </div>
+  </div>
+
+    <!-- 푸터 -->
+    <footer class="py-6 border-t border-[#EFE8DC] bg-[#FFFDF9]/60 text-center text-xs text-stone-500 mt-12 pb-24 md:pb-6">
+      <p class="font-bold text-stone-700">둥글이 스튜디오 (Doongle AI Studio) · 1인 AI 방송국 SaaS</p>
+      <p class="mt-1">Gemini Vision 2중 검증 · FFmpeg Ken Burns & 크로마키 숏폼 엔진 · Stripe</p>
+    </footer>
+
+    <!-- 모바일 & 폰 화면 전용 고정 바텀 네비게이션 탭 바 -->
+    <nav id="mobile-bottom-nav" class="md:hidden sticky bottom-0 z-40 bg-[#FFFDF9]/95 backdrop-blur-md border-t border-[#EFE8DC] py-2 px-3 flex items-center justify-around shadow-lg">
+      <button onclick="switchTab('upload')" id="bnav-upload" class="flex flex-col items-center py-1 px-3 rounded-2xl text-amber-900 bg-amber-100 font-extrabold text-[11px] transition-all">
+        <span class="text-lg leading-none mb-1">📸</span>
+        <span>리워드</span>
+      </button>
+      <button onclick="switchTab('admin')" id="bnav-admin" class="flex flex-col items-center py-1 px-3 rounded-2xl text-stone-500 font-semibold text-[11px] hover:text-stone-900 transition-all">
+        <span class="text-lg leading-none mb-1">🎬</span>
+        <span>숏폼</span>
+      </button>
+      <button onclick="switchTab('motion')" id="bnav-motion" class="flex flex-col items-center py-1 px-3 rounded-2xl text-stone-500 font-semibold text-[11px] hover:text-stone-900 transition-all">
+        <span class="text-lg leading-none mb-1">✨</span>
+        <span>모션스왑</span>
+      </button>
+      <button onclick="switchTab('pricing')" id="bnav-pricing" class="flex flex-col items-center py-1 px-3 rounded-2xl text-stone-500 font-semibold text-[11px] hover:text-stone-900 transition-all">
+        <span class="text-lg leading-none mb-1">👑</span>
+        <span>Pro</span>
+      </button>
+    </nav>
+
+    <!-- iOS 홈 인디케이터 바 (폰 프레임 모드 시 노출) -->
+    <div id="phone-home-indicator" class="hidden w-full bg-[#FFFDF9] py-1 border-t border-stone-100/40">
+      <div class="ios-home-bar"></div>
+    </div>
+
+  </div><!-- #app-root-wrapper 끝 -->
+
+  <!-- 자바스크립트 인터랙션 로직 -->
+  <script>
+    let currentPoints = 3000;
+    let isProUser = false;
+
+    // 업로드된 사진 및 영상 상태 관리
+    let uploadedPhotoCount = 1;
+    let uploadedVideoCount = 0;
+    let currentUploadedVideoFile = null;
+    let currentUploadedVideoUrl = '';
+    const PHOTO_UNIT_PRICE = 2; // 사진 1장당 2원
+    const VIDEO_UNIT_PRICE = 3; // 영상 1개당 3원
+
+    // 탭 전환 (PC 상단 바 + 모바일 탭 + 고정 바텀 네비게이션 연동)
+    function switchTab(tab) {
+      ['upload', 'admin', 'motion', 'pricing'].forEach(t => {
+        const el = document.getElementById(`tab-${t}`);
+        if (el) el.classList.add('hidden');
+        const nav = document.getElementById(`nav-${t}`);
+        if (nav) {
+          nav.className = 'px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-1.5 text-stone-600 hover:text-stone-900 hover:bg-stone-100/70 transition-all';
+        }
+        const mob = document.getElementById(`mob-${t}`);
+        if (mob) {
+          mob.className = 'flex-1 py-3 text-stone-500 font-semibold';
+        }
+        const bnav = document.getElementById(`bnav-${t}`);
+        if (bnav) {
+          bnav.className = 'flex flex-col items-center py-1 px-3 rounded-2xl text-stone-500 font-semibold text-[11px] hover:text-stone-900 transition-all';
+        }
+      });
+
+      const targetEl = document.getElementById(`tab-${tab}`);
+      if (targetEl) targetEl.classList.remove('hidden');
+
+      const activeNav = document.getElementById(`nav-${tab}`);
+      if (activeNav) {
+        activeNav.className = 'px-3 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 bg-amber-100 text-amber-900 border border-amber-200 shadow-sm transition-all';
+      }
+
+      const activeMob = document.getElementById(`mob-${tab}`);
+      if (activeMob) {
+        activeMob.className = 'flex-1 py-3 text-amber-700 font-extrabold border-b-2 border-amber-400';
+      }
+
+      const activeBNav = document.getElementById(`bnav-${tab}`);
+      if (activeBNav) {
+        activeBNav.className = 'flex flex-col items-center py-1 px-3 rounded-2xl text-amber-950 bg-amber-200/90 font-extrabold text-[11px] shadow-2xs transition-all';
+      }
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // ==========================================
+    // 📱 스마트폰 폰 화면 뷰 전환 토글 시스템
+    // ==========================================
+    let isPhoneMode = false;
+
+    function togglePhoneFrameMode() {
+      isPhoneMode = !isPhoneMode;
+      const body = document.body;
+      const wrapper = document.getElementById('app-root-wrapper');
+      const statusBar = document.getElementById('phone-status-bar');
+      const homeIndicator = document.getElementById('phone-home-indicator');
+      const bottomNav = document.getElementById('mobile-bottom-nav');
+      const btnLabel = document.getElementById('btn-phone-label');
+      const btnLabelMob = document.getElementById('btn-phone-label-mob');
+      const btnIcon = document.getElementById('btn-phone-icon');
+      const btn = document.getElementById('btn-toggle-phone-view');
+
+      if (isPhoneMode) {
+        body.classList.add('phone-frame-mode');
+        if (wrapper) wrapper.classList.add('phone-frame-container');
+        if (statusBar) statusBar.classList.remove('hidden');
+        if (homeIndicator) homeIndicator.classList.remove('hidden');
+        if (bottomNav) {
+          bottomNav.classList.remove('md:hidden');
+        }
+        if (btnLabel) btnLabel.innerText = 'PC 와이드로 보기';
+        if (btnLabelMob) btnLabelMob.innerText = 'PC뷰';
+        if (btnIcon) btnIcon.innerText = '💻';
+        if (btn) btn.className = 'px-2.5 py-1.5 rounded-full bg-stone-800 text-amber-300 hover:bg-stone-700 font-black text-[11px] sm:text-xs flex items-center gap-1 shadow-sm transition-all border border-amber-400/40';
+      } else {
+        body.classList.remove('phone-frame-mode');
+        if (wrapper) wrapper.classList.remove('phone-frame-container');
+        if (statusBar) statusBar.classList.add('hidden');
+        if (homeIndicator) homeIndicator.classList.add('hidden');
+        if (bottomNav) {
+          bottomNav.classList.add('md:hidden');
+        }
+        if (btnLabel) btnLabel.innerText = '폰 화면으로 보기';
+        if (btnLabelMob) btnLabelMob.innerText = '폰뷰';
+        if (btnIcon) btnIcon.innerText = '📱';
+        if (btn) btn.className = 'px-2.5 py-1.5 rounded-full bg-amber-400 hover:bg-amber-300 text-stone-950 font-black text-[11px] sm:text-xs flex items-center gap-1 shadow-sm transition-all border border-amber-500/40';
+      }
+    }
+
+    // 영수증 프리뷰
+    function previewReceipt(input) {
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('preview-receipt').src = e.target.result;
+        }
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+
+    // 사진 다중 선택 핸들러 (장당 2원 계산)
+    function handlePhotosSelected(input) {
+      if (input.files && input.files.length > 0) {
+        uploadedPhotoCount = input.files.length;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('preview-photo-main').src = e.target.result;
+        }
+        reader.readAsDataURL(input.files[0]);
+      } else {
+        uploadedPhotoCount = 1;
+      }
+      updateRewardCalculation();
+    }
+
+    // ==========================================
+    // 동영상 파일 업로드 및 드래그앤드롭 핸들러
+    // ==========================================
+
+    // 동영상 드롭존 클릭 시 숨겨진 input 트리거
+    function triggerVideoFileInput() {
+      const fileInput = document.getElementById('input-videos');
+      if (fileInput) fileInput.click();
+    }
+
+    // 드래그 오버 시 시각 피드백
+    function handleVideoDragOver(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const dropzone = document.getElementById('video-dropzone');
+      if (dropzone) {
+        dropzone.classList.add('border-emerald-500', 'bg-emerald-100/50', 'ring-2', 'ring-emerald-300');
+        dropzone.classList.remove('border-emerald-300');
+      }
+    }
+
+    // 드래그 벗어날 때 시각 피드백 원복
+    function handleVideoDragLeave(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const dropzone = document.getElementById('video-dropzone');
+      if (dropzone) {
+        dropzone.classList.remove('border-emerald-500', 'bg-emerald-100/50', 'ring-2', 'ring-emerald-300');
+        dropzone.classList.add('border-emerald-300');
+      }
+    }
+
+    // 드래그앤드롭으로 영상 파일 투하 시 처리
+    function handleVideoDropUpload(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      handleVideoDragLeave(e);
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        processSelectedVideoFile(e.dataTransfer.files[0]);
+      }
+    }
+
+    // 파일 선택 창에서 영상 선택 시 처리
+    function handleVideosSelected(input) {
+      if (input.files && input.files.length > 0) {
+        processSelectedVideoFile(input.files[0]);
+      }
+    }
+
+    // 영상 파일 공통 처리 함수
+    function processSelectedVideoFile(file) {
+      if (!file) return;
+
+      // 영상 파일 형식 검증 (비디오 MIME 또는 일반 영상 확장자)
+      const isVideo = file.type.startsWith('video/') || /\.(mp4|mov|webm|avi|mkv|quicktime|m4v)$/i.test(file.name);
+      if (!isVideo) {
+        alert('동영상 파일(MP4, MOV, WebM 등)만 업로드할 수 있습니다!');
+        return;
+      }
+
+      // 이전 생성된 Blob URL 메모리 정리
+      if (currentUploadedVideoUrl && currentUploadedVideoUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(currentUploadedVideoUrl);
+      }
+
+      currentUploadedVideoFile = file;
+      currentUploadedVideoUrl = URL.createObjectURL(file);
+
+      const placeholder = document.getElementById('video-placeholder');
+      const previewWrapper = document.getElementById('video-preview-wrapper');
+      const videoEl = document.getElementById('preview-video-main');
+      const fileInfo = document.getElementById('video-file-info');
+
+      if (videoEl) {
+        videoEl.src = currentUploadedVideoUrl;
+        videoEl.load();
+        videoEl.play().catch(() => {});
+      }
+
+      if (placeholder) placeholder.classList.add('hidden');
+      if (previewWrapper) {
+        previewWrapper.classList.remove('hidden');
+        previewWrapper.classList.add('flex');
+      }
+
+      if (fileInfo) {
+        const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+        fileInfo.innerText = `${file.name} (${sizeMB}MB)`;
+      }
+
+      uploadedVideoCount = 1;
+      updateRewardCalculation();
+    }
+
+    // 등록된 영상 파일 삭제 및 초기화
+    function removeSelectedVideo(e) {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
+      if (currentUploadedVideoUrl && currentUploadedVideoUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(currentUploadedVideoUrl);
+      }
+      currentUploadedVideoFile = null;
+      currentUploadedVideoUrl = '';
+
+      const input = document.getElementById('input-videos');
+      if (input) input.value = '';
+
+      const videoEl = document.getElementById('preview-video-main');
+      if (videoEl) {
+        videoEl.pause();
+        videoEl.src = '';
+      }
+
+      const placeholder = document.getElementById('video-placeholder');
+      const previewWrapper = document.getElementById('video-preview-wrapper');
+
+      if (placeholder) placeholder.classList.remove('hidden');
+      if (previewWrapper) {
+        previewWrapper.classList.add('hidden');
+        previewWrapper.classList.remove('flex');
+      }
+
+      uploadedVideoCount = 0;
+      updateRewardCalculation();
+    }
+
+    // 실시간 리워드 합산 계산기
+    function updateRewardCalculation() {
+      const photoReward = uploadedPhotoCount * PHOTO_UNIT_PRICE;
+      const videoReward = uploadedVideoCount * VIDEO_UNIT_PRICE;
+      const totalReward = photoReward + videoReward;
+
+      // 사진 수량 및 적립액
+      document.getElementById('photo-count').innerText = uploadedPhotoCount;
+      document.getElementById('photo-reward').innerText = photoReward;
+
+      // 영상 수량 및 적립액
+      document.getElementById('video-count').innerText = uploadedVideoCount;
+      document.getElementById('video-reward').innerText = videoReward;
+
+      // 요약 배너
+      document.getElementById('summary-photo-count').innerText = uploadedPhotoCount;
+      document.getElementById('summary-video-count').innerText = uploadedVideoCount;
+      document.getElementById('total-expected-reward').innerText = totalReward;
+
+      // 제출 버튼 텍스트
+      document.getElementById('btn-submit-reward-amount').innerText = totalReward;
+    }
+
+    // 활성화된 둥글이 현재 대본 상태 & 오디오 플레이어
+    let currentActiveScript = "와! 여기 크림라떼 한 입 먹고 기절할 뻔했둥! 버터바 겉바속촉 미쳤다~ ✨";
+    let doongleVoiceAudio = null;
+
+    // 둥글이 공식 오디오 객체 준비
+    function getDoongleAudioPlayer() {
+      if (!doongleVoiceAudio) {
+        doongleVoiceAudio = new Audio();
+        if (window.DOONGLE_VOICE_BASE64) {
+          doongleVoiceAudio.src = window.DOONGLE_VOICE_BASE64;
+        } else {
+          doongleVoiceAudio.src = 'assets/doongle_voice.mp3';
+        }
+      }
+      return doongleVoiceAudio;
+    }
+
+    // ==========================================
+    // 둥글이 공식 목소리 단독 발화 엔진 (겹침 원천 차단)
+    // 프로필의 고유 목소리 하나만 단독으로 선명하게 재생
+    // ==========================================
+    function speakDoongleVoice(mode = 'profile') {
+      // 1. 기존 실행 중이던 모든 음성 즉시 정지 (겹침 원천 차단)
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+      if (doongleVoiceAudio) {
+        doongleVoiceAudio.pause();
+        doongleVoiceAudio.currentTime = 0;
+      }
+
+      if (mode === 'tts') {
+        // [대본 텍스트 AI 단독 읽기]
+        if ('speechSynthesis' in window) {
+          const utter = new SpeechSynthesisUtterance(currentActiveScript);
+          utter.lang = 'ko-KR';
+          utter.pitch = 1.85; // 프로필 영상과 똑같은 귀여운 아기 목소리 톤
+          utter.rate = 1.15;  // 발랄한 템포
+          utter.volume = 1.0;
+
+          const voices = window.speechSynthesis.getVoices();
+          const koVoice = voices.find(v => (v.lang.includes('ko') || v.lang.includes('KO')));
+          if (koVoice) utter.voice = koVoice;
+
+          window.speechSynthesis.speak(utter);
+        }
+      } else {
+        // [기본: 프로필의 그 목소리로만 단독 재생 - 겹침 제로!]
+        try {
+          const audio = getDoongleAudioPlayer();
+          audio.currentTime = 0;
+          audio.volume = 1.0;
+          const playPromise = audio.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(err => {
+              console.log('Voice audio autoplay handled:', err);
+            });
+          }
+        } catch (e) {
+          console.log('Audio playback error:', e);
+        }
+      }
+    }
+
+    // 유저 업로드 및 2중 검증 제출
+    function handleUploadSubmit() {
+      const place = document.getElementById('input-place').value.trim();
+      const oneLineReview = document.getElementById('input-one-line-review').value.trim();
+      const review = document.getElementById('input-review').value.trim();
+      const consent = document.getElementById('input-consent').checked;
+
+      // 필수 유효성 검사 (장소명, 1줄 리뷰 대본, 생생한 솔직 후기 모두 필수!)
+      if (!place) {
+        alert('방문하신 장소명을 입력해 주세요!');
+        document.getElementById('input-place').focus();
+        return;
+      }
+      if (!oneLineReview) {
+        alert('★ 필수: 숏폼과 모션스왑에서 둥글이가 귀여운 목소리로 말할 "1줄 리뷰 대본"을 꼭 입력해 주세요!');
+        document.getElementById('input-one-line-review').focus();
+        return;
+      }
+      if (!review) {
+        alert('★ 필수: 방문하신 장소의 "생생한 솔직 후기"를 입력해 주세요!');
+        document.getElementById('input-review').focus();
+        return;
+      }
+      if (!consent) {
+        alert('콘텐츠 2차 활용 및 AI 가상 체험 동의에 체크해 주세요.');
+        return;
+      }
+      if (uploadedPhotoCount === 0 && uploadedVideoCount === 0) {
+        alert('사진 또는 동영상을 최소 1개 이상 등록해 주세요!');
+        return;
+      }
+
+      currentActiveScript = oneLineReview;
+      const totalRewardToPay = (uploadedPhotoCount * PHOTO_UNIT_PRICE) + (uploadedVideoCount * VIDEO_UNIT_PRICE);
+
+      const statusBox = document.getElementById('verify-status-box');
+      const statusTitle = document.getElementById('verify-status-title');
+      const statusDesc = document.getElementById('verify-status-desc');
+      const resultBox = document.getElementById('verify-result-box');
+      const submitBtn = document.getElementById('btn-submit-upload');
+
+      statusBox.classList.remove('hidden');
+      resultBox.classList.add('hidden');
+      submitBtn.disabled = true;
+      submitBtn.classList.add('opacity-50');
+
+      // 1단계: 영수증 판독
+      statusTitle.innerText = "1단계: Gemini Vision이 영수증 상호명과 결제 일자를 판독 중...";
+      statusDesc.innerText = `영수증 전표에서 '${place}' 상호명과 최근 거래 일자를 교차 검증하고 있습니다.`;
+
+      setTimeout(() => {
+        // 2단계: 사진/영상 원본성 및 1줄 대본 검수
+        statusTitle.innerText = "2단계: 사진/동영상 원본 판정 및 둥글이 1줄 대본 분석 중...";
+        statusDesc.innerText = `업로드된 사진 ${uploadedPhotoCount}장과 영상 ${uploadedVideoCount}개, 그리고 1줄 대본: "${oneLineReview}"을 정밀 검수하고 있습니다.`;
+
+        setTimeout(() => {
+          // 3단계: 완료 및 리워드 지급
+          statusBox.classList.add('hidden');
+          resultBox.classList.remove('hidden');
+          submitBtn.disabled = false;
+          submitBtn.classList.remove('opacity-50');
+
+          // 결과 모달 수치 반영
+          document.getElementById('result-awarded-reward').innerText = totalRewardToPay;
+          document.getElementById('res-photo-cnt').innerText = uploadedPhotoCount;
+          document.getElementById('res-video-cnt').innerText = uploadedVideoCount;
+          document.getElementById('result-desc').innerText = 
+            `영수증 상호명(${place}) 확인 완료! 직접 찍은 원본 소스와 둥글이 1줄 대본("${oneLineReview}")이 정식 인증되어 사진 ${uploadedPhotoCount}장(${uploadedPhotoCount*2}원) + 동영상 ${uploadedVideoCount}개(${uploadedVideoCount*3}원) = 총 ${totalRewardToPay}원이 즉시 계정에 적립되었습니다.`;
+
+          // 포인트 증가 및 UI 갱신
+          currentPoints += totalRewardToPay;
+          document.getElementById('user-points').innerText = currentPoints.toLocaleString();
+
+          // 관리자 갤러리에 카드 추가 (1줄 대본, 솔직 후기, 비디오 URL 전달)
+          addCardToGallery(
+            place,
+            oneLineReview,
+            review,
+            document.getElementById('preview-photo-main').src,
+            uploadedPhotoCount,
+            uploadedVideoCount,
+            totalRewardToPay,
+            currentUploadedVideoUrl
+          );
+
+        }, 1500);
+      }, 1500);
+    }
+
+    // 관리자 갤러리에 신규 카드 추가 (1줄 리뷰 대본 & 동영상 완벽 연동)
+    function addCardToGallery(place, oneLineReview, review, imgSrc, photos, videos, reward, videoUrl) {
+      const cardId = Date.now();
+      const hasVideo = !!videoUrl;
+
+      // 동영상이 있을 경우 비디오 태그로 생생하게 렌더링
+      const mediaHtml = hasVideo
+        ? `<video src="${videoUrl}" autoplay loop muted playsinline class="w-full h-full object-cover"></video>
+           <div class="absolute top-3 left-3 bg-emerald-600 text-white px-2.5 py-1 rounded-full text-[10px] font-bold shadow-sm flex items-center gap-1">
+             <span>🎬</span> 동영상 2중 인증 (+3원)
+           </div>`
+        : `<img src="${imgSrc}" alt="${place}" class="w-full h-full object-cover">
+           <div class="absolute top-3 left-3 bg-emerald-600 text-white px-2.5 py-1 rounded-full text-[10px] font-bold shadow-sm flex items-center gap-1">
+             <span>📸</span> 사진 2중 인증 (+2원)
+           </div>`;
+
+      const videoParam = hasVideo ? `'${videoUrl}'` : "''";
+      const safeOneLine = oneLineReview.replace(/'/g, "\\'");
+      const safeReview = review.replace(/'/g, "\\'");
+
+      const newCardHtml = `
+        <div class="bg-white rounded-3xl overflow-hidden border border-amber-300 shadow-md flex flex-col ring-2 ring-amber-200">
+          <div class="relative aspect-video w-full bg-stone-900 overflow-hidden">
+            ${mediaHtml}
+            <div class="absolute bottom-3 right-3 bg-black/75 backdrop-blur-sm text-amber-300 px-2.5 py-1 rounded-full text-[10px] font-bold">
+              사진 ${photos}장 · 영상 ${videos}개 (+${reward}원 지급)
+            </div>
+          </div>
+          <div class="p-5 flex-1 flex flex-col justify-between space-y-4">
+            <div class="space-y-2.5">
+              <div class="flex items-center justify-between">
+                <h3 class="font-extrabold text-stone-900 text-base">${place}</h3>
+                ${hasVideo ? '<span class="text-[10px] font-black text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200">🎬 동영상 소스</span>' : ''}
+              </div>
+
+              <!-- 둥글이 1줄 리뷰 반응 대본 표시 배너 -->
+              <div class="bg-amber-50 border border-amber-300/80 p-3 rounded-2xl space-y-1">
+                <div class="flex items-center justify-between text-[10px] font-black text-amber-900">
+                  <span class="flex items-center gap-1"><span>🎤</span> 둥글이 1줄 반응 대본:</span>
+                  <span class="text-amber-700 bg-amber-200 px-1.5 py-0.2 rounded-full">공식 목소리 탑재</span>
+                </div>
+                <p class="text-xs font-extrabold text-stone-900 leading-snug">
+                  "${oneLineReview}"
+                </p>
+              </div>
+
+              <!-- 상세 솔직 후기 -->
+              <p class="text-xs text-stone-600 line-clamp-2 bg-stone-50 p-2.5 rounded-2xl border border-stone-100">
+                <strong class="text-stone-700 block text-[11px] mb-0.5">📝 생생 솔직 후기:</strong>
+                "${review}"
+              </p>
+            </div>
+
+            <!-- 액션 버튼들 -->
+            <div class="pt-2 border-t border-stone-100 space-y-2">
+              <button
+                id="btn-render-${cardId}"
+                onclick="triggerRender('${cardId}', '${place}', '${safeOneLine}', '${safeReview}', ${videoParam})"
+                class="w-full py-3.5 px-4 rounded-2xl bg-amber-400 hover:bg-amber-300 active:bg-amber-500 text-stone-900 font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all"
+              >
+                <span>🏃</span> [둥글이 '1줄 대본' 숏폼 렌더링하기]
+              </button>
+
+              <button
+                type="button"
+                onclick="applyScriptToMotionSwap('${safeOneLine}')"
+                class="w-full py-2.5 px-3 rounded-xl bg-stone-100 hover:bg-amber-100 hover:text-amber-900 text-stone-700 font-bold text-[11px] flex items-center justify-center gap-1.5 transition-colors border border-stone-200"
+              >
+                <span>✨</span> [이 1줄 대본으로 AI 모션스왑 만들기]
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      document.getElementById('gallery-grid').insertAdjacentHTML('afterbegin', newCardHtml);
+    }
+
+    // 숏폼 렌더링 트리거
+    function triggerRender(id, place, oneLineScript, detailedReview, videoUrl) {
+      const btn = document.getElementById(`btn-render-${id}`);
+      btn.disabled = true;
+      btn.innerHTML = `<span class="animate-spin inline-block">⏳</span> 둥글이 공식 목소리로 숏폼 합성 중...`;
+
+      // 해당 카드의 대표 사진 추출
+      let cardImg = 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=1080';
+      const cardEl = btn.closest('.bg-white');
+      if (cardEl) {
+        const imgEl = cardEl.querySelector('img');
+        if (imgEl && imgEl.src) cardImg = imgEl.src;
+      }
+
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.className = "w-full py-3.5 px-4 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all";
+        btn.innerHTML = `<span>▶️</span> 완성된 '1줄 대본' 숏폼 보기`;
+        btn.onclick = () => openVideoModal(place, oneLineScript, detailedReview, cardImg, videoUrl);
+
+        // 즉시 모달 열기
+        openVideoModal(place, oneLineScript, detailedReview, cardImg, videoUrl);
+      }, 1600);
+    }
+
+    // 비디오 모달 열기/닫기 (유저의 1줄 대본을 둥글이 목소리로 자동 발화)
+    function openVideoModal(place, oneLineScript, detailedReview, bgImg, videoUrl) {
+      currentActiveScript = oneLineScript;
+      document.getElementById('modal-place-title').innerText = place;
+      document.getElementById('modal-hook-line').innerText = oneLineScript;
+      document.getElementById('modal-shout-text').innerText = oneLineScript;
+      document.getElementById('modal-body-line').innerText = detailedReview;
+
+      const bgImgEl = document.getElementById('modal-bg-img');
+      const bgVideoEl = document.getElementById('modal-bg-video');
+
+      if (videoUrl) {
+        // 동영상이 있을 경우: 동영상 배경 자동재생!
+        if (bgVideoEl) {
+          bgVideoEl.src = videoUrl;
+          bgVideoEl.classList.remove('hidden');
+          bgVideoEl.load();
+          bgVideoEl.play().catch(() => {});
+        }
+        if (bgImgEl) bgImgEl.classList.add('hidden');
+      } else {
+        // 사진만 있을 경우: Ken Burns 서서히 줌인 효과 적용
+        if (bgVideoEl) {
+          bgVideoEl.pause();
+          bgVideoEl.src = '';
+          bgVideoEl.classList.add('hidden');
+        }
+        if (bgImgEl) {
+          if (bgImg) bgImgEl.src = bgImg;
+          bgImgEl.classList.remove('hidden');
+        }
+      }
+
+      document.getElementById('video-modal').classList.remove('hidden');
+      document.getElementById('video-modal').classList.add('flex');
+
+      // 둥글이 프로필 공식 목소리 단독 재생 (겹침 제로!)
+      setTimeout(() => {
+        speakDoongleVoice('profile');
+      }, 350);
+    }
+
+    function closeVideoModal() {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+      if (doongleVoiceAudio) {
+        doongleVoiceAudio.pause();
+        doongleVoiceAudio.currentTime = 0;
+      }
+      const bgVideoEl = document.getElementById('modal-bg-video');
+      if (bgVideoEl) {
+        bgVideoEl.pause();
+      }
+      document.getElementById('video-modal').classList.add('hidden');
+      document.getElementById('video-modal').classList.remove('flex');
+    }
+
+    // 1줄 리뷰 대본을 모션 스왑으로 즉시 주입 및 이동
+    function applyScriptToMotionSwap(scriptText) {
+      switchTab('motion');
+      const motionInput = document.getElementById('motion-hook-input');
+      if (motionInput) {
+        motionInput.value = scriptText;
+      }
+      // 프로필 목소리로 단독 재생
+      speakDoongleVoice('profile');
+      alert(`🎉 1줄 리뷰 대본이 모션 스왑에 탑재되었습니다!\n\n대본: "${scriptText}"\n둥글이 프로필 목소리로 숏폼 합성을 진행해보세요.`);
+    }
+
+    // 모션 스왑 결과에서 둥글이 목소리 듣기
+    function speakCurrentMotionHook() {
+      speakDoongleVoice('profile');
+    }
+
+    // ==========================================
+    // 둥글이 마크 클릭 시 미니 동영상 플레이어 제어
+    // ==========================================
+    function openDoongleMiniPlayer() {
+      const modal = document.getElementById('doongle-mini-player-modal');
+      const video = document.getElementById('doongle-clip-video');
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+      if (video) {
+        video.currentTime = 0;
+        video.play().catch(e => {
+          console.log('Autoplay handled:', e);
+        });
+      }
+    }
+
+    function closeDoongleMiniPlayer() {
+      const modal = document.getElementById('doongle-mini-player-modal');
+      const video = document.getElementById('doongle-clip-video');
+      if (video) {
+        video.pause();
+      }
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+
+    function handleMiniPlayerBackdropClick(e) {
+      if (e.target && e.target.id === 'doongle-mini-player-modal') {
+        closeDoongleMiniPlayer();
+      }
+    }
+
+    function replayDoongleClip() {
+      const video = document.getElementById('doongle-clip-video');
+      if (video) {
+        video.currentTime = 0;
+        video.play().catch(e => console.log(e));
+      }
+    }
+
+    function downloadShortForm() {
+      alert('둥글이 숏폼 영상(MP4) 다운로드가 시작되었습니다!');
+    }
+
+    // Stripe 월 9,900원 결제 시뮬레이션
+    function handleStripeSubscribe() {
+      const btn = document.getElementById('btn-stripe-subscribe');
+      btn.disabled = true;
+      btn.innerHTML = `<span class="animate-spin inline-block">⏳</span> Stripe 안전 결제창 연결 중...`;
+
+      setTimeout(() => {
+        const confirmPay = confirm("[Stripe 정기구독 결제 시뮬레이션]\n\n상품명: 둥글이 AI 숏폼 방송국 Pro 사장님 패스\n결제금액: 월 9,900원 (정기결제)\n\n결제를 승인하고 Pro 권한을 활성화하시겠습니까?");
+        if (confirmPay) {
+          isProUser = true;
+          document.getElementById('pro-badge').classList.remove('hidden');
+          btn.innerHTML = `<span>✓</span> Pro 사장님 구독 중 (다음 결제일: 2026-11-25)`;
+          btn.className = "w-full py-4 rounded-2xl bg-emerald-500 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm";
+          alert("🎉 축하합니다! 월 9,900원 Pro 구독이 활성화되었습니다.\n이제 둥글이 AI 숏폼 렌더링을 무제한으로 사용하실 수 있습니다!");
+          switchTab('admin');
+        } else {
+          btn.disabled = false;
+          btn.innerHTML = `<span>💳</span> 월 9,900원으로 Pro 무제한 렌더링 시작`;
+        }
+      }, 1000);
+    }
+    // ==========================================
+    // AI 모션 스왑 인터랙션 로직
+    // ==========================================
+    let activeMotionPreset = 'dance';
+
+    function selectMotionPreset(presetKey, hookText) {
+      activeMotionPreset = presetKey;
+      ['dance', 'cute', 'mukbang', 'tour'].forEach(p => {
+        const el = document.getElementById(`preset-${p}`);
+        if (el) {
+          el.className = 'border-2 border-stone-200 hover:border-amber-300 bg-white rounded-2xl p-2.5 cursor-pointer transition-all';
+        }
+      });
+      const activeEl = document.getElementById(`preset-${presetKey}`);
+      if (activeEl) {
+        activeEl.className = 'border-2 border-amber-400 bg-amber-50/80 rounded-2xl p-2.5 cursor-pointer transition-all shadow-xs ring-2 ring-amber-200';
+      }
+      document.getElementById('motion-hook-input').value = hookText;
+    }
+
+    function handleMotionImageChange(input) {
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('motion-preview-img').src = e.target.result;
+        }
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+
+    function handleMotionDragOver(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const dz = document.getElementById('motion-image-dropzone');
+      if (dz) {
+        dz.classList.add('border-amber-500', 'bg-amber-100/40', 'ring-2', 'ring-amber-300');
+        dz.classList.remove('border-amber-300');
+      }
+    }
+
+    function handleMotionDragLeave(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const dz = document.getElementById('motion-image-dropzone');
+      if (dz) {
+        dz.classList.remove('border-amber-500', 'bg-amber-100/40', 'ring-2', 'ring-amber-300');
+        dz.classList.add('border-amber-300');
+      }
+    }
+
+    function handleMotionDrop(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      handleMotionDragLeave(e);
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        const file = e.dataTransfer.files[0];
+        if (file.type.startsWith('image/')) {
+          const reader = new FileReader();
+          reader.onload = function(evt) {
+            document.getElementById('motion-preview-img').src = evt.target.result;
+          };
+          reader.readAsDataURL(file);
+        } else {
+          alert('이미지 파일을 업로드해 주세요!');
+        }
+      }
+    }
+
+    function startMotionSwapRender() {
+      const hookText = document.getElementById('motion-hook-input').value.trim();
+      if (!hookText) {
+        alert('영상에 들어갈 3초 훅 텍스트를 입력해 주세요!');
+        return;
+      }
+
+      const statusBox = document.getElementById('motion-render-status');
+      const statusTitle = document.getElementById('motion-render-title');
+      const statusDesc = document.getElementById('motion-render-desc');
+      const startBtn = document.getElementById('btn-motion-start');
+
+      statusBox.classList.remove('hidden');
+      startBtn.disabled = true;
+      startBtn.classList.add('opacity-50');
+
+      // 1단계
+      statusTitle.innerText = "1단계: 캐릭터 이미지 포즈 랜드마크 분석 중...";
+      statusDesc.innerText = "업로드된 이미지의 신체 관절과 얼굴 각도를 정밀 감지하고 있습니다.";
+
+      setTimeout(() => {
+        // 2단계
+        statusTitle.innerText = "2단계: Replicate AnimateAnyone 모션 뼈대 전이 합성 중...";
+        statusDesc.innerText = "선택된 숏폼 챌린지 템플릿의 모션 타이밍에 맞춰 캐릭터 동작을 생성 중입니다.";
+
+        setTimeout(() => {
+          // 3단계
+          statusTitle.innerText = "3단계: FFmpeg 3초 훅 텍스트 자막 오버레이 및 9:16 인코딩...";
+          statusDesc.innerText = `상단 훅 텍스트: "${hookText}" 자막 배너를 렌더링하고 있습니다.`;
+
+          setTimeout(() => {
+            statusBox.classList.add('hidden');
+            startBtn.disabled = false;
+            startBtn.classList.remove('opacity-50');
+
+            // 결과 뷰어 표시
+            document.getElementById('motion-form-container').classList.add('hidden');
+            document.getElementById('motion-result-viewer').classList.remove('hidden');
+            document.getElementById('motion-viewer-hook-text').innerText = hookText;
+            window.scrollTo({ top: 100, behavior: 'smooth' });
+
+            // 둥글이 프로필 공식 목소리 단독 발화! (겹침 제로)
+            setTimeout(() => {
+              speakDoongleVoice('profile');
+            }, 300);
+
+          }, 1500);
+        }, 1800);
+      }, 1500);
+    }
+
+    function resetMotionSwap() {
+      document.getElementById('motion-result-viewer').classList.add('hidden');
+      document.getElementById('motion-form-container').classList.remove('hidden');
+      window.scrollTo({ top: 100, behavior: 'smooth' });
+    }
+
+    // 둥글이 실제 이미지 자동 주입 (경로 및 Base64 이중 보장)
+    window.addEventListener('DOMContentLoaded', () => {
+      // 1. 사이트 로고 -> 둥글이 귀여운 동그란 얼굴
+      const logoEl = document.getElementById('nav-doongle-img');
+      if (logoEl) {
+        if (window.DOONGLE_FACE_BASE64) {
+          logoEl.src = window.DOONGLE_FACE_BASE64;
+        } else {
+          logoEl.src = 'assets/doongle_face.png';
+        }
+      }
+
+      // 2. 뛰어다니는 캐릭터 & 프리뷰 -> 둥글이 전신
+      const applyBodyImage = (imgId) => {
+        const el = document.getElementById(imgId);
+        if (el) {
+          if (window.DOONGLE_FRONT_BASE64) {
+            el.src = window.DOONGLE_FRONT_BASE64;
+          } else {
+            el.src = 'assets/doongle_front.png';
+          }
+        }
+      };
+
+      applyBodyImage('modal-doongle-character');
+      applyBodyImage('motion-preview-img');
+    });
+  </script>
+</body>
+</html>
