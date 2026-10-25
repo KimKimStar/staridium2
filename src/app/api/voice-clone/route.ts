@@ -4,7 +4,7 @@ import { generateDoongleClonedSpeech } from '@/lib/elevenlabs/voice-clone';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { text, voiceSamplePath, apiKey } = body;
+    const { text, voiceSamplePath, apiKey, saveToDisk } = body;
 
     if (!text || typeof text !== 'string') {
       return NextResponse.json(
@@ -17,6 +17,7 @@ export async function POST(req: NextRequest) {
       text,
       voiceSamplePath,
       apiKey,
+      saveToDisk: saveToDisk ?? true,
     });
 
     if (!result.success || !result.audioBuffer) {

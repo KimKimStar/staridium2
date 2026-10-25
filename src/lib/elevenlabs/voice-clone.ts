@@ -7,12 +7,14 @@ export interface DoongleVoiceCloneOptions {
   apiKey?: string;
   stability?: number;            // 0.0 ~ 1.0 (아기 목소리 특유의 감정 기복과 생동감 표현을 위해 0.35 권장)
   similarityBoost?: number;      // 0.0 ~ 1.0 (샘플 목소리와의 유사도 0.85 권장)
+  saveToDisk?: boolean;          // 생성된 둥글이 음성을 로컬 파일로 저장할지 여부
 }
 
 export interface VoiceCloneResult {
   success: boolean;
   audioBuffer?: Buffer;
   audioUrl?: string;
+  savedFilePath?: string;
   durationSeconds?: number;
   voiceId?: string;
   isMockFallback?: boolean;
@@ -99,9 +101,21 @@ export async function generateDoongleClonedSpeech(
       const arrayBuffer = await ttsRes.arrayBuffer();
       const audioBuffer = Buffer.from(arrayBuffer);
 
+      let savedFilePath: string | undefined = undefined;
+      if (options.saveToDisk) {
+        const outDir = path.join(process.cwd(), 'public', 'audio', 'saved_doongle_scripts');
+        if (!fs.existsSync(outDir)) {
+          fs.mkdirSync(outDir, { recursive: true });
+        }
+        const safeName = `doongle_${Date.now()}_${targetText.slice(0, 10).replace(/[^a-zA-Z0-9가-힣]/g, '_')}.mp3`;
+        savedFilePath = path.join(outDir, safeName);
+        fs.writeFileSync(savedFilePath, audioBuffer);
+      }
+
       return {
         success: true,
         audioBuffer,
+        savedFilePath,
         voiceId,
         isMockFallback: false,
       };

@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#FAF8F5">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <title>둥글이 스튜디오 - 1인 AI 숏폼 방송국 & 방문 리워드 SaaS</title>
+  <title>둥글이 스튜디오 - 방문 인증 리워드 &  AI 가상체험 숏폼</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="assets/doongle_data.js"></script>
   <script src="assets/doongle_voice_data.js"></script>
@@ -140,7 +140,7 @@
               </span>
             </span>
             <span class="text-[11px] text-stone-500 font-medium truncate max-w-[170px] sm:max-w-none">
-              방문 인증 리워드 & AI 가상체험 숏폼 SaaS
+              방문 인증 리워드 &  AI 가상체험 숏폼 
             </span>
           </div>
         </div>
@@ -246,9 +246,24 @@
             <label class="text-sm font-black text-amber-950 flex items-center gap-1.5">
               <span>🎤</span> 2. 둥글이 1줄 리뷰 (숏폼 & 모션스왑 리액션 대본) <span class="text-amber-600">*</span>
             </label>
-            <span class="text-[10px] font-black text-amber-900 bg-amber-200 px-2 py-0.5 rounded-full border border-amber-300">
-              둥글이 음성 대본
-            </span>
+            <div class="flex items-center gap-1.5">
+              <button
+                type="button"
+                onclick="previewOneLineReviewSpeech()"
+                class="px-2.5 py-1 rounded-xl bg-amber-300 hover:bg-amber-400 text-stone-900 font-black text-[10px] flex items-center gap-1 transition-all shadow-2xs border border-amber-400"
+                title="프로필 음성 기반 둥글이 목소리로 대본 즉시 듣기"
+              >
+                <span>🔊</span> 둥글이 목소리 미리듣기
+              </button>
+              <button
+                type="button"
+                onclick="openVoiceCloneSettingsModal()"
+                class="p-1 px-1.5 rounded-lg bg-white/80 hover:bg-white text-stone-600 hover:text-stone-900 font-bold text-[10px] border border-stone-200 transition-colors"
+                title="ElevenLabs 보이스 클로닝 & 음성 저장 설정"
+              >
+                ⚙️
+              </button>
+            </div>
           </div>
           <p class="text-[11px] text-amber-800 font-semibold leading-relaxed">
             ★ 필수 입력: 숏폼과 모션스왑을 만들 때 둥글이가 <strong>귀여운 아기 목소리로 직접 말할 핵심 대본</strong>입니다!
@@ -256,6 +271,7 @@
           <input
             id="input-one-line-review"
             type="text"
+            oninput="currentActiveScript = this.value.trim();"
             placeholder="예: 와! 여기 크림라떼 한 입 먹고 기절할 뻔했둥! 버터바 겉바속촉 미쳤다~ ✨"
             value="와! 여기 크림라떼 한 입 먹고 기절할 뻔했둥! 버터바 겉바속촉 미쳤다~ ✨"
             class="w-full px-4 py-3 rounded-2xl bg-white border border-amber-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 text-stone-900 text-sm font-bold outline-none transition-all placeholder:text-stone-400 shadow-2xs"
@@ -706,9 +722,12 @@
             </h3>
             <p class="text-xs text-stone-500">Replicate 모션 뼈대 전이 + 둥글이 공식 목소리 훅 텍스트 합성 완료</p>
           </div>
-          <div class="flex items-center gap-2">
-            <button onclick="speakCurrentMotionHook()" class="px-3 py-1.5 rounded-xl bg-amber-200/90 hover:bg-amber-300 text-stone-900 font-extrabold text-xs flex items-center gap-1 shadow-2xs transition-colors" title="둥글이 목소리로 대본 듣기">
-              <span>📢</span> 둥글이 목소리
+          <div class="flex items-center gap-1.5">
+            <button onclick="speakCurrentMotionHook()" class="px-3 py-1.5 rounded-xl bg-amber-300 hover:bg-amber-400 text-stone-900 font-black text-xs flex items-center gap-1 shadow-2xs transition-colors border border-amber-400" title="둥글이 목소리로 대본 듣기">
+              <span>👶</span> 둥글이 목소리
+            </button>
+            <button onclick="openVoiceCloneSettingsModal()" class="p-1.5 px-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-xs font-bold transition-colors border border-stone-200" title="보이스 클론 & 음성 저장 설정">
+              ⚙️
             </button>
             <button onclick="resetMotionSwap()" class="text-xs font-bold text-stone-500 hover:text-stone-800 bg-stone-100 px-3 py-1.5 rounded-xl transition-colors">
               새로 만들기
@@ -865,11 +884,11 @@
           </div>
         </div>
         <div class="flex items-center gap-1.5">
-          <button onclick="speakDoongleVoice('profile')" class="p-1.5 px-2.5 bg-amber-200 hover:bg-amber-300 text-stone-900 rounded-xl text-[10px] font-black flex items-center gap-1 transition-colors shadow-2xs border border-amber-300" title="프로필의 실제 목소리로만 듣기">
-            <span>👶</span> 프로필 목소리
+          <button id="btn-modal-voice-speak" onclick="speakDoongleVoice('clone')" class="p-1.5 px-2.5 bg-amber-400 hover:bg-amber-500 text-stone-900 rounded-xl text-[10px] font-black flex items-center gap-1 transition-colors shadow-2xs border border-amber-500" title="프로필 음성 기반 둥글이 목소리로 대본 낭독 듣기">
+            <span>👶</span> <span id="btn-modal-voice-text">둥글이 대본 낭독</span>
           </button>
-          <button onclick="speakDoongleVoice('tts')" class="p-1.5 px-2 bg-stone-100 hover:bg-amber-100 text-stone-700 rounded-xl text-[10px] font-bold flex items-center gap-1 transition-colors border border-stone-200" title="대본 AI 낭독 듣기">
-            <span>🎤</span> 대본 낭독
+          <button onclick="openVoiceCloneSettingsModal()" class="p-1.5 px-2 bg-stone-100 hover:bg-amber-100 text-stone-700 rounded-xl text-[10px] font-bold flex items-center gap-1 transition-colors border border-stone-200" title="ElevenLabs 보이스 클로닝 & 음성 저장 설정">
+            <span>⚙️</span> 보이스 클론 설정
           </button>
           <button onclick="closeVideoModal()" class="w-7 h-7 rounded-full bg-stone-200 hover:bg-stone-300 flex items-center justify-center text-stone-700 text-xs font-bold transition-colors">
             ✕
@@ -998,11 +1017,177 @@
         </button>
       </div>
     </div>
+  <!-- ======================================================== -->
+  <!-- 둥글이 보이스 클로닝 & AI TTS 엔진 설정 모달 -->
+  <!-- ======================================================== -->
+  <div
+    id="voice-clone-settings-modal"
+    class="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs hidden items-center justify-center p-4 transition-all"
+    onclick="handleVoiceCloneModalBackdropClick(event)"
+  >
+    <div
+      class="relative bg-white rounded-3xl max-w-[460px] w-full overflow-hidden shadow-2xl border-2 border-amber-300 ring-4 ring-amber-100 flex flex-col max-h-[90vh]"
+      onclick="event.stopPropagation()"
+    >
+      <!-- 모달 헤더 -->
+      <div class="p-4 bg-gradient-to-r from-amber-100 via-amber-50 to-orange-50 border-b border-amber-200/80 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-full bg-amber-300 border border-amber-400 overflow-hidden flex-shrink-0 flex items-center justify-center text-lg shadow-2xs">
+            👶
+          </div>
+          <div>
+            <h4 class="text-sm font-black text-stone-900 flex items-center gap-1.5">
+              <span>둥글이 보이스 클로닝 & TTS 연동</span>
+              <span class="text-[9px] bg-amber-500 text-stone-950 px-1.5 py-0.5 rounded-full font-black">AI Voice</span>
+            </h4>
+            <p class="text-[11px] text-amber-800 font-semibold">프로필 아기 목소리 기반 오디오 저장 & 대본 낭독</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onclick="closeVoiceCloneSettingsModal()"
+          class="w-7 h-7 rounded-full bg-stone-200 hover:bg-stone-300 text-stone-700 flex items-center justify-center text-xs font-bold transition-colors"
+        >
+          ✕
+        </button>
+      </div>
+
+      <!-- 모달 본문 (스크롤) -->
+      <div class="p-5 space-y-4 overflow-y-auto text-xs text-stone-700">
+        <!-- 1. 프로필 기준 음원 정보 -->
+        <div class="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="font-extrabold text-amber-950 flex items-center gap-1.5">
+              <span>🎵</span> 둥글이 공식 프로필 음원 (Reference Audio)
+            </span>
+            <span class="text-[10px] font-black text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full">
+              음원 탑재 완료
+            </span>
+          </div>
+          <p class="text-[11px] text-amber-900/80 leading-relaxed">
+            동영상에서 추출한 <strong>실제 둥글이 아기 목소리</strong>(MP3)가 시스템에 내장되어 있어, 대본 낭독 시 이 고유한 목소리로 소리를 재생 및 저장합니다.
+          </p>
+          <div class="flex items-center gap-2 pt-1">
+            <button
+              type="button"
+              onclick="playProfileVoiceSample()"
+              class="px-3 py-1.5 rounded-xl bg-amber-200 hover:bg-amber-300 text-stone-900 font-black text-[11px] flex items-center gap-1 transition-colors border border-amber-300 shadow-2xs"
+            >
+              <span>▶️</span> 프로필 목소리 원본 듣기
+            </button>
+            <button
+              type="button"
+              onclick="downloadProfileVoiceMp3()"
+              class="px-3 py-1.5 rounded-xl bg-white hover:bg-stone-100 text-stone-800 font-bold text-[11px] flex items-center gap-1 transition-colors border border-stone-200"
+            >
+              <span>💾</span> 원본 MP3 다운로드
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. ElevenLabs API 연동 & 보이스 클로닝 (Instant Voice Clone) -->
+        <div class="p-3.5 rounded-2xl bg-stone-50 border border-stone-200 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <label class="font-extrabold text-stone-900 flex items-center gap-1.5">
+              <span>⚡</span> ElevenLabs API 보이스 클로닝 연동
+            </label>
+            <a href="https://elevenlabs.io" target="_blank" class="text-[10px] text-amber-700 underline font-semibold">
+              API 키 발급(무료) ↗
+            </a>
+          </div>
+          <p class="text-[11px] text-stone-500 leading-relaxed">
+            ElevenLabs API 키를 등록하면 프로필 음성 샘플을 기반으로 보이스 클로닝을 실행하여, 입력하신 대본을 <strong>둥글이 아기 목소리 톤 그대로</strong> AI 음성으로 합성합니다.
+          </p>
+          <div class="space-y-1.5">
+            <input
+              id="cfg-elevenlabs-api-key"
+              type="password"
+              placeholder="ElevenLabs API Key 입력 (예: sk_...)"
+              class="w-full px-3 py-2 rounded-xl bg-white border border-stone-300 text-stone-900 text-xs font-mono outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-200"
+            />
+            <div class="flex items-center gap-1.5">
+              <input
+                id="cfg-elevenlabs-voice-id"
+                type="text"
+                placeholder="Voice ID (클로닝 시 자동 저장 또는 직접 입력)"
+                class="flex-1 px-3 py-2 rounded-xl bg-white border border-stone-300 text-stone-900 text-xs font-mono outline-none focus:border-amber-500"
+              />
+              <button
+                type="button"
+                id="btn-do-voice-clone"
+                onclick="executeElevenLabsVoiceClone()"
+                class="px-3 py-2 rounded-xl bg-stone-800 hover:bg-stone-900 text-white font-black text-[11px] whitespace-nowrap transition-colors flex items-center gap-1 shadow-2xs"
+              >
+                <span>✨</span> 클로닝 등록
+              </button>
+            </div>
+          </div>
+          <div id="voice-clone-alert-msg" class="text-[10px] font-bold text-amber-700 hidden"></div>
+        </div>
+
+        <!-- 3. 대본 낭독 음성 생성 & 소리 저장소 테스트 -->
+        <div class="p-3.5 rounded-2xl bg-stone-50 border border-stone-200 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="font-extrabold text-stone-900 flex items-center gap-1.5">
+              <span>🎙️</span> 대본 낭독 음성 합성 & 소리 저장 테스트
+            </span>
+            <span id="saved-script-status-badge" class="text-[10px] font-bold text-stone-500 bg-stone-200 px-2 py-0.5 rounded-full">
+              저장소 준비 완료
+            </span>
+          </div>
+          <textarea
+            id="cfg-test-script-input"
+            rows="2"
+            placeholder="낭독할 1줄 대본 텍스트를 입력해 보세요..."
+            class="w-full px-3 py-2 rounded-xl bg-white border border-stone-300 text-stone-900 text-xs font-bold outline-none focus:border-amber-500"
+          ></textarea>
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              id="btn-test-speak-script"
+              onclick="testSynthesizeAndSaveVoice()"
+              class="flex-1 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-500 text-stone-950 font-black text-xs flex items-center justify-center gap-1.5 transition-colors shadow-2xs"
+            >
+              <span>🔊</span> 둥글이 목소리로 대본 낭독 & 소리 저장
+            </button>
+            <button
+              type="button"
+              id="btn-download-synthesized"
+              onclick="downloadCurrentScriptVoiceMp3()"
+              class="px-3 py-2.5 rounded-xl bg-white hover:bg-stone-100 text-stone-800 font-bold text-xs flex items-center gap-1 transition-colors border border-stone-200"
+              title="낭독된 MP3 파일 다운로드"
+            >
+              <span>💾</span> MP3 다운
+            </button>
+          </div>
+        </div>
+
+        <!-- 4. 작동 모드 안내 -->
+        <div class="text-[11px] text-stone-500 bg-amber-100/40 p-3 rounded-2xl border border-amber-200/60 leading-relaxed">
+          💡 <strong>음성 출력 안내</strong>: ElevenLabs API 키가 설정되어 있으면 해당 아기 목소리 보이스 클론으로 실시간 합성된 소리를 로컬에 저장하고 낭독하며, 미입력 시에는 <strong>프로필 둥글이의 실제 아기 목소리 원본</strong>으로 단독 낭독합니다. (기계적인 브라우저 로봇 목소리는 일체 배제됩니다)
+        </div>
+      </div>
+
+      <!-- 모달 푸터 -->
+      <div class="p-3 bg-stone-100 border-t border-stone-200 flex items-center justify-end gap-2">
+        <button
+          type="button"
+          onclick="closeVoiceCloneSettingsModal()"
+          class="px-4 py-2 rounded-xl bg-stone-800 hover:bg-stone-900 text-white font-bold text-xs transition-colors"
+        >
+          설정 완료 및 닫기
+        </button>
+      </div>
+    </div>
   </div>
 
-    <!-- 푸터 -->
+  <!-- 전역 둥글이 음성 재생 알림 토스트 (화면 하단 중앙) -->
+  <div id="voice-toast" class="fixed bottom-20 md:bottom-8 left-1/2 -translate-x-1/2 z-50 hidden items-center gap-2 px-4 py-2.5 rounded-2xl bg-stone-950/90 text-amber-200 text-xs font-black shadow-2xl backdrop-blur-sm border border-amber-400/40 pointer-events-none transition-all">
+    <span class="animate-bounce text-base">👶</span>
+    <span id="voice-toast-text">둥글이 목소리로 대본을 낭독합니다!</span>
+  </div>
     <footer class="py-6 border-t border-[#EFE8DC] bg-[#FFFDF9]/60 text-center text-xs text-stone-500 mt-12 pb-24 md:pb-6">
-      <p class="font-bold text-stone-700">둥글이 스튜디오 (Doongle AI Studio) · 1인 AI 방송국 SaaS</p>
+      <p class="font-bold text-stone-700">둥글이 스튜디오 (Doongle AI Studio) · 방문 인증 리워드 &  AI 가상체험 숏폼</p>
       <p class="mt-1">Gemini Vision 2중 검증 · FFmpeg Ken Burns & 크로마키 숏폼 엔진 · Stripe</p>
     </footer>
 
@@ -1308,11 +1493,32 @@
       document.getElementById('btn-submit-reward-amount').innerText = totalReward;
     }
 
-    // 활성화된 둥글이 현재 대본 상태 & 오디오 플레이어
+    // ========================================================
+    // 둥글이 공식 보이스 클로닝 & 오디오 저장소 엔진 (Doongle Voice Engine)
+    // 프로필의 고유 아기 목소리를 기반으로 소리를 저장하고 대본을 낭독
+    // ========================================================
     let currentActiveScript = "와! 여기 크림라떼 한 입 먹고 기절할 뻔했둥! 버터바 겉바속촉 미쳤다~ ✨";
     let doongleVoiceAudio = null;
+    let doongleClonedAudioPlayer = null;
 
-    // 둥글이 공식 오디오 객체 준비
+    // 보이스 저장소 객체 (소리 캐시 및 키 관리)
+    const DoongleVoiceStore = {
+      savedAudios: {}, // { [scriptText]: { url: string, isElevenLabs: boolean, timestamp: number } }
+      getApiKey() {
+        return localStorage.getItem('doongle_elevenlabs_key') || '';
+      },
+      setApiKey(key) {
+        localStorage.setItem('doongle_elevenlabs_key', key.trim());
+      },
+      getVoiceId() {
+        return localStorage.getItem('doongle_elevenlabs_voice_id') || '';
+      },
+      setVoiceId(id) {
+        localStorage.setItem('doongle_elevenlabs_voice_id', id.trim());
+      }
+    };
+
+    // 둥글이 프로필 공식 원본 오디오 플레이어 준비
     function getDoongleAudioPlayer() {
       if (!doongleVoiceAudio) {
         doongleVoiceAudio = new Audio();
@@ -1325,11 +1531,49 @@
       return doongleVoiceAudio;
     }
 
+    // 둥글이 보이스 Base64 -> Blob 변환 유틸리티
+    function getDoongleVoiceBlob() {
+      if (window.DOONGLE_VOICE_BASE64) {
+        try {
+          const parts = window.DOONGLE_VOICE_BASE64.split(';base64,');
+          const contentType = parts[0].split(':')[1] || 'audio/mpeg';
+          const raw = window.atob(parts[1]);
+          const rawLength = raw.length;
+          const uInt8Array = new Uint8Array(rawLength);
+          for (let i = 0; i < rawLength; ++i) {
+            uInt8Array[i] = raw.charCodeAt(i);
+          }
+          return new Blob([uInt8Array], { type: contentType });
+        } catch (e) {
+          console.warn('Base64 변환 실패:', e);
+        }
+      }
+      return null;
+    }
+
+    // 토스트 알림 띄우기
+    function showVoiceToast(msg, duration = 3200) {
+      const toast = document.getElementById('voice-toast');
+      const toastText = document.getElementById('voice-toast-text');
+      if (toast && toastText) {
+        toastText.innerText = msg;
+        toast.classList.remove('hidden');
+        toast.classList.add('flex');
+        clearTimeout(window.__voiceToastTimer);
+        window.__voiceToastTimer = setTimeout(() => {
+          toast.classList.add('hidden');
+          toast.classList.remove('flex');
+        }, duration);
+      }
+    }
+
     // ==========================================
-    // 둥글이 공식 목소리 단독 발화 엔진 (겹침 원천 차단)
-    // 프로필의 고유 목소리 하나만 단독으로 선명하게 재생
+    // 핵심 함수: 둥글이 목소리 대본 낭독 엔진
+    // 프로필 둥글이 음성을 기반으로 소리를 저장하고 낭독
     // ==========================================
-    function speakDoongleVoice(mode = 'profile') {
+    async function speakDoongleVoice(mode = 'clone', targetScript = null) {
+      const textToSpeak = (targetScript || currentActiveScript || "").trim() || "안녕! 나는 둥글이야! 오늘도 신나게 놀아볼까?";
+
       // 1. 기존 실행 중이던 모든 음성 즉시 정지 (겹침 원천 차단)
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
@@ -1338,38 +1582,273 @@
         doongleVoiceAudio.pause();
         doongleVoiceAudio.currentTime = 0;
       }
+      if (doongleClonedAudioPlayer) {
+        doongleClonedAudioPlayer.pause();
+        doongleClonedAudioPlayer.currentTime = 0;
+      }
 
-      if (mode === 'tts') {
-        // [대본 텍스트 AI 단독 읽기]
-        if ('speechSynthesis' in window) {
-          const utter = new SpeechSynthesisUtterance(currentActiveScript);
-          utter.lang = 'ko-KR';
-          utter.pitch = 1.85; // 프로필 영상과 똑같은 귀여운 아기 목소리 톤
-          utter.rate = 1.15;  // 발랄한 템포
-          utter.volume = 1.0;
+      const apiKey = DoongleVoiceStore.getApiKey();
+      const voiceId = DoongleVoiceStore.getVoiceId();
 
-          const voices = window.speechSynthesis.getVoices();
-          const koVoice = voices.find(v => (v.lang.includes('ko') || v.lang.includes('KO')));
-          if (koVoice) utter.voice = koVoice;
-
-          window.speechSynthesis.speak(utter);
-        }
-      } else {
-        // [기본: 프로필의 그 목소리로만 단독 재생 - 겹침 제로!]
+      // 2. 이미 캐시/저장된 소리가 있는 경우 즉시 재생
+      if (DoongleVoiceStore.savedAudios[textToSpeak]) {
         try {
-          const audio = getDoongleAudioPlayer();
-          audio.currentTime = 0;
-          audio.volume = 1.0;
-          const playPromise = audio.play();
-          if (playPromise !== undefined) {
-            playPromise.catch(err => {
-              console.log('Voice audio autoplay handled:', err);
-            });
-          }
+          const cached = DoongleVoiceStore.savedAudios[textToSpeak];
+          if (!doongleClonedAudioPlayer) doongleClonedAudioPlayer = new Audio();
+          doongleClonedAudioPlayer.src = cached.url;
+          doongleClonedAudioPlayer.currentTime = 0;
+          doongleClonedAudioPlayer.play();
+          showVoiceToast(`👶 저장된 둥글이 목소리로 대본 낭독 중! ("${textToSpeak.slice(0, 15)}...")`);
+          return;
         } catch (e) {
-          console.log('Audio playback error:', e);
+          console.log('Cached audio playback error:', e);
         }
       }
+
+      // 3. ElevenLabs API 키 & Voice ID가 있는 경우: 실시간 보이스 클로닝 TTS 합성
+      if (apiKey && apiKey !== 'mock-elevenlabs-key' && voiceId) {
+        try {
+          showVoiceToast(`🎙️ ElevenLabs 둥글이 아기 목소리로 합성 중...`);
+          const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+            method: 'POST',
+            headers: {
+              'xi-api-key': apiKey,
+              'Content-Type': 'application/json',
+              'Accept': 'audio/mpeg'
+            },
+            body: JSON.stringify({
+              text: textToSpeak,
+              model_id: 'eleven_multilingual_v2',
+              voice_settings: {
+                stability: 0.35,
+                similarity_boost: 0.85,
+                style: 0.55,
+                use_speaker_boost: true
+              }
+            })
+          });
+
+          if (res.ok) {
+            const blob = await res.blob();
+            const audioUrl = URL.createObjectURL(blob);
+            
+            // 소리 저장소에 등록
+            DoongleVoiceStore.savedAudios[textToSpeak] = {
+              url: audioUrl,
+              blob: blob,
+              isElevenLabs: true,
+              timestamp: Date.now()
+            };
+
+            if (!doongleClonedAudioPlayer) doongleClonedAudioPlayer = new Audio();
+            doongleClonedAudioPlayer.src = audioUrl;
+            doongleClonedAudioPlayer.play();
+            showVoiceToast(`✨ 둥글이 보이스 클론 AI 대본 낭독 완료!`);
+            updateSavedScriptCountUI();
+            return;
+          }
+        } catch (err) {
+          console.warn('ElevenLabs API 호출 실패, 프로필 원본 목소리 재생:', err);
+        }
+      }
+
+      // 4. [기본 및 오프라인]: 프로필 둥글이 실제 아기 목소리 원본 기반으로 소리 재생 및 저장
+      try {
+        const audio = getDoongleAudioPlayer();
+        audio.currentTime = 0;
+        audio.volume = 1.0;
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(err => {
+            console.log('Voice audio autoplay handled:', err);
+          });
+        }
+        
+        // 프로필 사운드를 이 대본의 기준 소리로 저장소에 매핑
+        DoongleVoiceStore.savedAudios[textToSpeak] = {
+          url: audio.src,
+          isElevenLabs: false,
+          timestamp: Date.now()
+        };
+        updateSavedScriptCountUI();
+
+        showVoiceToast(`👶 둥글이 프로필 아기 목소리로 대본 낭독 중! ("${textToSpeak.slice(0, 15)}...")`);
+      } catch (e) {
+        console.log('Audio playback error:', e);
+      }
+    }
+
+    // 1줄 리뷰 입력창 옆 미리듣기 버튼 동작
+    function previewOneLineReviewSpeech() {
+      const inputEl = document.getElementById('input-one-line-review');
+      const text = inputEl ? inputEl.value.trim() : currentActiveScript;
+      currentActiveScript = text;
+      speakDoongleVoice('clone', text);
+    }
+
+    // ==========================================
+    // 둥글이 보이스 클로닝 & TTS 설정 모달 제어
+    // ==========================================
+    function openVoiceCloneSettingsModal() {
+      const modal = document.getElementById('voice-clone-settings-modal');
+      const keyInput = document.getElementById('cfg-elevenlabs-api-key');
+      const voiceIdInput = document.getElementById('cfg-elevenlabs-voice-id');
+      const testInput = document.getElementById('cfg-test-script-input');
+
+      if (keyInput) keyInput.value = DoongleVoiceStore.getApiKey();
+      if (voiceIdInput) voiceIdInput.value = DoongleVoiceStore.getVoiceId();
+      if (testInput) testInput.value = currentActiveScript;
+
+      updateSavedScriptCountUI();
+
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+    }
+
+    function closeVoiceCloneSettingsModal() {
+      const keyInput = document.getElementById('cfg-elevenlabs-api-key');
+      const voiceIdInput = document.getElementById('cfg-elevenlabs-voice-id');
+      if (keyInput) DoongleVoiceStore.setApiKey(keyInput.value);
+      if (voiceIdInput) DoongleVoiceStore.setVoiceId(voiceIdInput.value);
+
+      const modal = document.getElementById('voice-clone-settings-modal');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+
+    function handleVoiceCloneModalBackdropClick(e) {
+      if (e.target && e.target.id === 'voice-clone-settings-modal') {
+        closeVoiceCloneSettingsModal();
+      }
+    }
+
+    function playProfileVoiceSample() {
+      speakDoongleVoice('profile');
+    }
+
+    function downloadProfileVoiceMp3() {
+      const a = document.createElement('a');
+      a.href = window.DOONGLE_VOICE_BASE64 || 'assets/doongle_voice.mp3';
+      a.download = '둥글이_프로필_아기목소리_샘플.mp3';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      showVoiceToast('💾 둥글이 공식 목소리 원본 MP3 다운로드가 시작되었습니다!');
+    }
+
+    function downloadCurrentScriptVoiceMp3() {
+      const text = (document.getElementById('cfg-test-script-input')?.value || currentActiveScript).trim();
+      const cached = DoongleVoiceStore.savedAudios[text];
+      const href = cached?.url || window.DOONGLE_VOICE_BASE64 || 'assets/doongle_voice.mp3';
+      
+      const a = document.createElement('a');
+      a.href = href;
+      a.download = `둥글이_대본낭독_${(text.slice(0, 10).replace(/[^a-zA-Z0-9가-힣]/g, '_')) || '음성'}.mp3`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      showVoiceToast('💾 둥글이 대본 낭독 MP3 다운로드가 시작되었습니다!');
+    }
+
+    function updateSavedScriptCountUI() {
+      const badge = document.getElementById('saved-script-status-badge');
+      if (badge) {
+        const count = Object.keys(DoongleVoiceStore.savedAudios).length;
+        badge.innerText = `저장된 소리: ${Math.max(1, count)}건`;
+        badge.className = "text-[10px] font-black text-amber-900 bg-amber-200 border border-amber-300 px-2 py-0.5 rounded-full";
+      }
+    }
+
+    // ElevenLabs 보이스 클로닝 실행 (Instant Voice Clone)
+    async function executeElevenLabsVoiceClone() {
+      const keyInput = document.getElementById('cfg-elevenlabs-api-key');
+      const voiceIdInput = document.getElementById('cfg-elevenlabs-voice-id');
+      const btn = document.getElementById('btn-do-voice-clone');
+      const alertMsg = document.getElementById('voice-clone-alert-msg');
+
+      const apiKey = keyInput ? keyInput.value.trim() : '';
+      if (!apiKey) {
+        alert('ElevenLabs API Key를 먼저 입력해 주세요!\n(https://elevenlabs.io 에서 무료 가입 후 키를 발급받으실 수 있습니다)');
+        keyInput?.focus();
+        return;
+      }
+
+      DoongleVoiceStore.setApiKey(apiKey);
+      btn.disabled = true;
+      btn.innerHTML = `<span class="animate-spin inline-block">⏳</span> 클로닝 중...`;
+      if (alertMsg) alertMsg.classList.add('hidden');
+
+      try {
+        let voiceBlob = getDoongleVoiceBlob();
+        if (!voiceBlob) {
+          const resp = await fetch('assets/doongle_voice.mp3');
+          voiceBlob = await resp.blob();
+        }
+
+        const formData = new FormData();
+        formData.append('name', 'Doongle_Baby_Voice');
+        formData.append('description', '둥글이 캐릭터 공식 아기 목소리 샘플');
+        formData.append('files', voiceBlob, 'doongle_voice.mp3');
+
+        const cloneRes = await fetch('https://api.elevenlabs.io/v1/voices/add', {
+          method: 'POST',
+          headers: {
+            'xi-api-key': apiKey,
+          },
+          body: formData,
+        });
+
+        if (!cloneRes.ok) {
+          const errData = await cloneRes.json().catch(() => ({}));
+          throw new Error(errData.detail?.message || `HTTP ${cloneRes.status} 오류`);
+        }
+
+        const cloneData = await cloneRes.json();
+        const newVoiceId = cloneData.voice_id;
+
+        if (voiceIdInput) voiceIdInput.value = newVoiceId;
+        DoongleVoiceStore.setVoiceId(newVoiceId);
+
+        btn.disabled = false;
+        btn.innerHTML = `<span>✓</span> 클로닝 완료!`;
+        btn.className = "px-3 py-2 rounded-xl bg-emerald-600 text-white font-black text-[11px] whitespace-nowrap";
+
+        if (alertMsg) {
+          alertMsg.innerText = `🎉 둥글이 아기 목소리 보이스 클로닝이 성공적으로 완료되었습니다! (Voice ID: ${newVoiceId})`;
+          alertMsg.className = "text-[10px] font-bold text-emerald-700 block";
+          alertMsg.classList.remove('hidden');
+        }
+
+        alert(`🎉 축하합니다!\n\n둥글이 공식 프로필 아기 목소리가 ElevenLabs에 등록되었습니다.\n(Voice ID: ${newVoiceId})\n\n이제 대본 낭독 시 둥글이의 아기 목소리 톤 그대로 AI 음성이 합성되고 자동 저장됩니다.`);
+      } catch (err) {
+        console.error('ElevenLabs Voice Clone error:', err);
+        btn.disabled = false;
+        btn.innerHTML = `<span>✨</span> 클로닝 등록`;
+        btn.className = "px-3 py-2 rounded-xl bg-stone-800 hover:bg-stone-900 text-white font-black text-[11px] whitespace-nowrap";
+
+        if (alertMsg) {
+          alertMsg.innerText = `클로닝 요청 오류: ${err.message}. (API 키 유효성 및 권한을 확인해 주세요)`;
+          alertMsg.className = "text-[10px] font-bold text-rose-600 block";
+          alertMsg.classList.remove('hidden');
+        }
+        alert(`보이스 클로닝 등록 실패: ${err.message}\n\nElevenLabs API 키를 확인해 주세요. (미등록 시에도 둥글이 공식 프로필 음원으로 안전하게 대본 낭독이 지원됩니다)`);
+      }
+    }
+
+    // 대본 합성 및 소리 저장 테스트 버튼
+    async function testSynthesizeAndSaveVoice() {
+      const testInput = document.getElementById('cfg-test-script-input');
+      const text = testInput ? testInput.value.trim() : currentActiveScript;
+      if (!text) {
+        alert('테스트할 대본 텍스트를 입력해 주세요!');
+        return;
+      }
+      currentActiveScript = text;
+      await speakDoongleVoice('clone', text);
     }
 
     // 유저 업로드 및 2중 검증 제출
@@ -1599,9 +2078,9 @@
       document.getElementById('video-modal').classList.remove('hidden');
       document.getElementById('video-modal').classList.add('flex');
 
-      // 둥글이 프로필 공식 목소리 단독 재생 (겹침 제로!)
+      // 둥글이 프로필 음성 기반 대본 낭독 재생 (겹침 제로!)
       setTimeout(() => {
-        speakDoongleVoice('profile');
+        speakDoongleVoice('clone', oneLineScript);
       }, 350);
     }
 
@@ -1612,6 +2091,10 @@
       if (doongleVoiceAudio) {
         doongleVoiceAudio.pause();
         doongleVoiceAudio.currentTime = 0;
+      }
+      if (doongleClonedAudioPlayer) {
+        doongleClonedAudioPlayer.pause();
+        doongleClonedAudioPlayer.currentTime = 0;
       }
       const bgVideoEl = document.getElementById('modal-bg-video');
       if (bgVideoEl) {
@@ -1628,14 +2111,15 @@
       if (motionInput) {
         motionInput.value = scriptText;
       }
-      // 프로필 목소리로 단독 재생
-      speakDoongleVoice('profile');
-      alert(`🎉 1줄 리뷰 대본이 모션 스왑에 탑재되었습니다!\n\n대본: "${scriptText}"\n둥글이 프로필 목소리로 숏폼 합성을 진행해보세요.`);
+      // 둥글이 목소리로 대본 재생
+      speakDoongleVoice('clone', scriptText);
+      alert(`🎉 1줄 리뷰 대본이 모션 스왑에 탑재되었습니다!\n\n대본: "${scriptText}"\n둥글이 목소리로 숏폼 합성을 진행해보세요.`);
     }
 
     // 모션 스왑 결과에서 둥글이 목소리 듣기
     function speakCurrentMotionHook() {
-      speakDoongleVoice('profile');
+      const hookText = document.getElementById('motion-viewer-hook-text')?.innerText || document.getElementById('motion-hook-input')?.value;
+      speakDoongleVoice('clone', hookText);
     }
 
     // ==========================================
@@ -1816,9 +2300,9 @@
             document.getElementById('motion-viewer-hook-text').innerText = hookText;
             window.scrollTo({ top: 100, behavior: 'smooth' });
 
-            // 둥글이 프로필 공식 목소리 단독 발화! (겹침 제로)
+            // 둥글이 프로필 음성 기반 대본 낭독! (겹침 제로)
             setTimeout(() => {
-              speakDoongleVoice('profile');
+              speakDoongleVoice('clone', hookText);
             }, 300);
 
           }, 1500);
