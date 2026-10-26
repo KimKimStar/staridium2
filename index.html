@@ -467,11 +467,19 @@
           </div>
         </div>
 
-        <!-- 동의 체크박스 -->
-        <label class="flex items-start gap-3 p-3.5 bg-amber-50/50 border border-amber-200/60 rounded-2xl cursor-pointer hover:bg-amber-50 transition-colors">
-          <input id="input-consent" type="checkbox" checked class="mt-0.5 w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-stone-300">
+        <!-- 동의 체크박스 (기본 미체크: 사용자가 직접 클릭해야 함) -->
+        <label id="consent-container" class="flex items-start gap-3 p-3.5 bg-white border-2 border-stone-200 rounded-2xl cursor-pointer hover:border-amber-400 hover:bg-amber-50/40 transition-all select-none">
+          <input
+            id="input-consent"
+            type="checkbox"
+            onchange="handleConsentChange(this)"
+            class="mt-0.5 w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-stone-300 cursor-pointer"
+          >
           <div class="text-xs text-stone-700 leading-snug">
-            <span class="font-bold text-stone-900">[필수] 콘텐츠 2차 활용 및 AI 가상 체험 동의</span>
+            <span class="font-bold text-stone-900 flex items-center gap-1.5">
+              <span class="text-amber-600 font-extrabold">[필수 동의]</span>
+              콘텐츠 2차 활용 및 AI 가상 체험 동의
+            </span>
             <p class="text-stone-500 mt-0.5">
               제공해주신 사진/영상이 재가공되어 쓰일 수 있음에 동의합니다.
             </p>
@@ -1569,6 +1577,18 @@
       img.src = dataUrl;
     }
 
+    // 콘텐츠 2차 활용 동의 체크박스 변경 핸들러
+    function handleConsentChange(checkbox) {
+      const container = document.getElementById('consent-container');
+      if (container) {
+        if (checkbox.checked) {
+          container.className = 'flex items-start gap-3 p-3.5 bg-amber-50/80 border-2 border-amber-400 rounded-2xl cursor-pointer transition-all select-none shadow-2xs';
+        } else {
+          container.className = 'flex items-start gap-3 p-3.5 bg-white border-2 border-stone-200 rounded-2xl cursor-pointer hover:border-amber-400 hover:bg-amber-50/40 transition-all select-none';
+        }
+      }
+    }
+
     // 사진 다중 선택 핸들러 (장당 2원 계산)
     function handlePhotosSelected(input) {
       if (input.files && input.files.length > 0) {
@@ -2261,7 +2281,14 @@
         return;
       }
       if (!consent) {
-        alert('콘텐츠 2차 활용 및 AI 가상 체험 동의에 체크해 주세요.');
+        const container = document.getElementById('consent-container');
+        if (container) {
+          container.className = 'flex items-start gap-3 p-3.5 bg-rose-50 border-2 border-rose-400 rounded-2xl cursor-pointer transition-all select-none animate-pulse';
+          container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        showVoiceToast("⚠️ [필수 동의] 콘텐츠 활용 동의 항목을 직접 체크해 주세요!");
+        alert('⚠️ [필수 동의]\n콘텐츠 2차 활용 및 AI 가상 체험 동의 항목을 사람이 직접 클릭하여 동의해 주셔야 인증 제출이 가능합니다.');
+        document.getElementById('input-consent').focus();
         return;
       }
       if (uploadedPhotoCount === 0 && uploadedVideoCount === 0) {

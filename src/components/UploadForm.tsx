@@ -94,7 +94,7 @@ export default function UploadForm() {
     }
 
     if (!consentAiUsage) {
-      alert('콘텐츠 2차 활용 및 AI 가상 체험 동의에 체크해 주세요.');
+      alert('⚠️ [필수 동의]\n콘텐츠 2차 활용 및 AI 가상 체험 동의 항목을 사람이 직접 클릭하여 동의해 주셔야 인증 제출이 가능합니다.');
       return;
     }
 
@@ -376,17 +376,25 @@ export default function UploadForm() {
           </div>
         </div>
 
-        {/* 동의 체크박스 */}
+        {/* 동의 체크박스 (기본 미체크: 사용자가 직접 클릭해야 함) */}
         <div className="pt-1">
-          <label className="flex items-start gap-3 p-3.5 bg-amber-50/50 border border-amber-200/60 rounded-2xl cursor-pointer hover:bg-amber-50 transition-colors">
+          <label className={`flex items-start gap-3 p-3.5 border-2 rounded-2xl cursor-pointer transition-all select-none ${
+            consentAiUsage
+              ? 'bg-amber-50/80 border-amber-400 shadow-2xs'
+              : 'bg-white border-stone-200 hover:border-amber-400 hover:bg-amber-50/40'
+          }`}>
             <input
               type="checkbox"
+              required
               checked={consentAiUsage}
               onChange={(e) => setConsentAiUsage(e.target.checked)}
-              className="mt-0.5 w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-stone-300"
+              className="mt-0.5 w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-stone-300 cursor-pointer"
             />
             <div className="text-xs text-stone-700 leading-snug">
-              <span className="font-bold text-stone-900">[필수] 콘텐츠 2차 활용 및 AI 가상 체험 동의</span>
+              <span className="font-bold text-stone-900 flex items-center gap-1.5">
+                <span className="text-amber-600 font-extrabold">[필수 동의]</span>
+                콘텐츠 2차 활용 및 AI 가상 체험 동의
+              </span>
               <p className="text-stone-500 mt-0.5">
                 제공해주신 사진/영상이 재가공되어 쓰일 수 있음에 동의합니다.
               </p>
