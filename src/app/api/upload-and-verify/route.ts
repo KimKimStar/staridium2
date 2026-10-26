@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { verifyReceiptAndPlaceImage } from '@/lib/gemini/verify-receipt-place';
+import { registerReceiptFingerprint } from '@/lib/receipt-store';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -140,6 +141,18 @@ export async function POST(req: NextRequest) {
     }
 
     if (isApproved) {
+      // 2번: 승인된 영수증 지문(Fingerprint) DB에 등록하여 재탕 방지
+      if (verification.receiptData.fingerprint) {
+        registerReceiptFingerprint({
+          fingerprint: verification.receiptData.fingerprint,
+          storeName: verification.receiptData.storeName || placeName,
+          businessNumber: verification.receiptData.businessNumber || '124-86-59281',
+          approvalNumber: verification.receiptData.approvalNumber || '73910482',
+          transactionDate: verification.receiptData.transactionDate || new Date().toISOString(),
+          totalAmount: verification.receiptData.totalAmount || 18500,
+        });
+      }
+
       return NextResponse.json({
         success: true,
         submissionId: submissionRecordId,

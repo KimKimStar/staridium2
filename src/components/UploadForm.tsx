@@ -421,6 +421,21 @@ export default function UploadForm() {
               {result.success ? result.message : result.error}
             </p>
 
+            {result.verification?.receiptData && (
+              <div className="mt-3 pt-3 border-t border-stone-200/60 space-y-1.5 text-[11px]">
+                <div className="flex items-center justify-between font-bold">
+                  <span>🛡️ 1번 필터 스코어: {result.verification.receiptData.score}점 / 100점</span>
+                  {result.verification.receiptData.fingerprint && (
+                    <span className="font-mono text-[10px] text-stone-500">지문: {result.verification.receiptData.fingerprint}</span>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 gap-1 text-[10px] text-stone-700">
+                  <span>{result.verification.receiptData.hasApprovalNumber ? `✓ 승인번호: ${result.verification.receiptData.approvalNumber || '인증'}` : '✕ 승인번호 미검출 (0점)'}</span>
+                  <span>{result.verification.receiptData.hasBusinessNumber ? `✓ 사업자번호: ${result.verification.receiptData.businessNumber || '인증'}` : '✕ 사업자번호 미검출 (0점)'}</span>
+                </div>
+              </div>
+            )}
+
             {result.success && (
               <div className="mt-3 pt-3 border-t border-emerald-200/60 flex flex-wrap gap-2 text-[11px]">
                 <span className="bg-white/80 px-2 py-1 rounded-lg">📸 사진 {result.photoCount}장: 각 2원 지급</span>

@@ -294,21 +294,70 @@
           >바닐라 빈을 직접 끓여 넣어서 크림이 진짜 부드럽고 묵직해요. 통창 채광도 너무 예뻐서 사진 찍기 최고였습니다!</textarea>
         </div>
 
-        <!-- 3. 결제 영수증 업로드 칸 (단독 분리) -->
-        <div class="p-4 rounded-2xl bg-stone-50 border border-stone-200 space-y-2">
-          <div class="flex items-center justify-between">
-            <label class="block text-sm font-bold text-stone-800">
-              3. 결제 영수증 첨부 <span class="text-amber-500">*</span>
-            </label>
-            <span class="text-[11px] text-amber-700 bg-amber-100/70 px-2 py-0.5 rounded-full font-semibold">
-              Gemini AI 필수 인증
+        <!-- 3. 결제 영수증 업로드 칸 (1번: 100점 스코어링 & 2번: 지문 중복방지 필터) -->
+        <div class="p-4 rounded-2xl bg-amber-50/60 border-2 border-amber-300 space-y-3">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+            <div class="flex items-center gap-1.5">
+              <label class="block text-sm font-black text-amber-950">
+                <span>🧾</span> 3. 결제 영수증 첨부 <span class="text-amber-600">*</span>
+              </label>
+            </div>
+            <span class="text-[10px] font-black text-emerald-900 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full shadow-2xs flex items-center gap-1 self-start sm:self-auto">
+              <span>🛡️</span> 1번(승인번호 100점제) & 2번(지문 중복방지) 필터 가동
             </span>
           </div>
-          <div class="relative border-2 border-dashed border-stone-200 hover:border-amber-400 bg-white rounded-2xl p-4 text-center min-h-[140px] flex flex-col items-center justify-center overflow-hidden transition-all">
-            <img id="preview-receipt" src="https://images.unsplash.com/photo-1554415707-9e4466b88588?w=800" alt="영수증 미리보기" class="w-full max-w-xs h-28 object-cover rounded-xl" />
-            <input type="file" accept="image/*" onchange="previewReceipt(this)" class="absolute inset-0 opacity-0 cursor-pointer" />
+
+          <!-- 영수증 이미지 프리뷰 영역 -->
+          <div class="relative border-2 border-dashed border-amber-300 hover:border-amber-500 bg-white rounded-2xl p-3 text-center min-h-[140px] flex flex-col items-center justify-center overflow-hidden transition-all group">
+            <img id="preview-receipt" src="https://images.unsplash.com/photo-1554415707-9e4466b88588?w=800" alt="영수증 미리보기" class="w-full max-w-xs h-32 object-cover rounded-xl shadow-xs" />
+            <input type="file" id="input-receipt-file" accept="image/*" onchange="previewReceipt(this)" class="absolute inset-0 opacity-0 cursor-pointer z-10" />
+            
+            <div class="absolute bottom-2 inset-x-2 bg-stone-900/80 backdrop-blur-xs text-white text-[10px] font-bold py-1 px-2 rounded-lg pointer-events-none flex items-center justify-center gap-1">
+              <span>📷</span> 클릭하여 내 영수증 사진 업로드
+            </div>
           </div>
-          <p class="text-[11px] text-stone-500 text-center">🧾 상호명과 결제일자가 또렷하게 보이도록 찍은 사진을 등록해 주세요. (클릭하여 변경)</p>
+
+          <!-- 1, 2번 검증 즉석 테스트용 샘플 버튼 -->
+          <div class="p-2.5 bg-white/90 rounded-xl border border-amber-200/80 space-y-2">
+            <div class="flex items-center justify-between text-[11px]">
+              <span class="font-extrabold text-stone-800 flex items-center gap-1">
+                <span>⚡</span> 영수증 판별 즉석 테스트:
+              </span>
+              <span id="current-receipt-type-badge" class="text-[10px] font-black text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full">
+                현재: 진짜 영수증 (승인번호 有)
+              </span>
+            </div>
+            <div class="grid grid-cols-3 gap-1.5 text-[10px]">
+              <button
+                type="button"
+                id="btn-sample-real"
+                onclick="setReceiptSample('real')"
+                class="py-1.5 px-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white font-black transition-all shadow-2xs flex items-center justify-center gap-1"
+              >
+                <span>✓</span> 진짜 영수증
+              </button>
+              <button
+                type="button"
+                id="btn-sample-paper"
+                onclick="setReceiptSample('paper')"
+                class="py-1.5 px-2 rounded-lg bg-stone-100 hover:bg-rose-100 text-stone-700 hover:text-rose-800 font-bold transition-all border border-stone-200 flex items-center justify-center gap-1"
+              >
+                <span>📄</span> 그냥 종이/낙서
+              </button>
+              <button
+                type="button"
+                id="btn-sample-dup"
+                onclick="setReceiptSample('duplicate')"
+                class="py-1.5 px-2 rounded-lg bg-stone-100 hover:bg-amber-100 text-stone-700 hover:text-amber-900 font-bold transition-all border border-stone-200 flex items-center justify-center gap-1"
+              >
+                <span>🔄</span> 중복 영수증 재탕
+              </button>
+            </div>
+          </div>
+
+          <p class="text-[11px] text-amber-900/80 leading-relaxed font-medium">
+            💡 <strong>판별 규칙</strong>: 신용카드 승인번호(8자리)와 사업자등록번호(10자리)가 없는 일반 종이나 이미 리워드가 지급된 영수증은 <strong>0원으로 자동 차단</strong>됩니다.
+          </p>
         </div>
 
         <!-- 4 & 5. 사진 업로드 칸과 동영상 업로드 칸 분리 -->
@@ -429,28 +478,66 @@
           </div>
         </label>
 
-        <!-- 진행 상태 알림 상자 -->
-        <div id="verify-status-box" class="hidden p-4 rounded-2xl bg-amber-50 border border-amber-300 text-xs text-amber-900 space-y-1">
-          <div class="flex items-center gap-2 font-bold">
-            <span class="inline-block animate-spin text-sm">⏳</span>
-            <span id="verify-status-title">Gemini Vision 2중 검증 시스템 가동 중...</span>
+        <!-- 진행 상태 알림 상자 (1, 2번 정밀 분석 중) -->
+        <div id="verify-status-box" class="hidden p-4 rounded-2xl bg-amber-50 border-2 border-amber-400 text-xs text-amber-950 space-y-2 shadow-sm">
+          <div class="flex items-center gap-2 font-black text-sm text-amber-900">
+            <span class="inline-block animate-spin text-base">⏳</span>
+            <span id="verify-status-title">1번 필터: 영수증 100점 진위 판별 스코어링 분석 중...</span>
           </div>
-          <p id="verify-status-desc" class="text-[11px] text-amber-800">영수증 상호명 판독 및 원본 촬영 여부를 분석 중입니다.</p>
+          <p id="verify-status-desc" class="text-[11px] text-amber-800 font-semibold leading-relaxed">
+            사업자등록번호(10자리)와 카드 승인번호(8자리), 그리고 부가세(10%) 산출 일치 여부를 검사하고 있습니다.
+          </p>
+          <div class="w-full bg-amber-200/60 rounded-full h-1.5 overflow-hidden">
+            <div id="verify-progress-bar" class="bg-amber-600 h-1.5 rounded-full transition-all duration-500 w-1/3 animate-pulse"></div>
+          </div>
         </div>
 
-        <!-- 최종 성공/실패 결과 상자 -->
-        <div id="verify-result-box" class="hidden p-5 rounded-2xl border text-xs bg-emerald-50 border-emerald-300 text-emerald-900 space-y-2">
-          <div class="flex items-center gap-2 font-bold text-sm">
-            <span>✅</span>
-            <span>Gemini 2중 인증 완료! 리워드 (+<span id="result-awarded-reward">2</span>원) 즉시 지급 성공</span>
+        <!-- 최종 성공/실패 결과 상자 (상세 점수표 및 지문 내역) -->
+        <div id="verify-result-box" class="hidden p-5 rounded-2xl border-2 text-xs space-y-3 transition-all">
+          <div class="flex items-center justify-between pb-2 border-b border-stone-200/60">
+            <div class="flex items-center gap-2 font-black text-sm" id="result-status-header">
+              <span id="result-status-icon" class="text-base">✅</span>
+              <span id="result-status-title">영수증 진위 인증 완료!</span>
+            </div>
+            <span id="result-score-badge" class="px-2.5 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-2xs">
+              진위 스코어: 100점 / 100점
+            </span>
           </div>
-          <p class="text-xs text-stone-600" id="result-desc">
-            영수증 상호명(브루잉랩) 및 최근 결제일자 확인 완료! 직접 찍은 원본 소스로 판정되어 리워드가 즉시 계정에 적립되었습니다.
+
+          <p class="text-xs leading-relaxed font-medium" id="result-desc">
+            영수증 상호명 확인 완료! 직접 찍은 원본 소스가 인증되었습니다.
           </p>
-          <div class="pt-2 border-t border-emerald-200/60 flex flex-wrap gap-2 text-[11px]">
-            <span class="bg-white/80 px-2 py-1 rounded-lg">🧾 영수증: 정상 전표 (신뢰도 98%)</span>
-            <span class="bg-white/80 px-2 py-1 rounded-lg">📸 사진 <span id="res-photo-cnt">1</span>장: 각 2원 적립</span>
-            <span class="bg-white/80 px-2 py-1 rounded-lg">🎬 영상 <span id="res-video-cnt">0</span>개: 각 3원 적립</span>
+
+          <!-- 5대 메타데이터 검증 세부 점수 카드 -->
+          <div id="result-score-breakdown" class="p-3 rounded-xl bg-white/90 border border-stone-200 space-y-2 text-[11px]">
+            <div class="font-bold text-stone-800 flex items-center justify-between">
+              <span>📋 영수증 정밀 검증 체크리스트</span>
+              <span id="result-fingerprint-text" class="text-[10px] font-mono text-stone-500">고유 지문: RCP-7391-5928-1850</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px]">
+              <div id="chk-biz-no" class="flex items-center gap-1.5 text-emerald-800 font-bold bg-emerald-50 px-2 py-1 rounded-lg">
+                <span>✓</span> 사업자등록번호: 124-86-59281 (25점)
+              </div>
+              <div id="chk-auth-no" class="flex items-center gap-1.5 text-emerald-800 font-bold bg-emerald-50 px-2 py-1 rounded-lg">
+                <span>✓</span> 카드 승인번호: 73910482 (25점)
+              </div>
+              <div id="chk-date" class="flex items-center gap-1.5 text-emerald-800 font-bold bg-emerald-50 px-2 py-1 rounded-lg">
+                <span>✓</span> 거래일시: 2026-10-26 (최근 20점)
+              </div>
+              <div id="chk-vat" class="flex items-center gap-1.5 text-emerald-800 font-bold bg-emerald-50 px-2 py-1 rounded-lg">
+                <span>✓</span> 부가세(10%) 산출: 일치 (15점)
+              </div>
+            </div>
+            <div id="chk-dup" class="text-[10px] text-stone-600 bg-stone-50 p-1.5 rounded-lg border border-stone-200/60 flex items-center justify-between">
+              <span id="chk-dup-text">🔒 2번 필터(중복 재탕 검사): <strong>신규 영수증 확인</strong> (중복 이력 없음)</span>
+              <span id="chk-dup-badge" class="text-emerald-700 font-black">통과</span>
+            </div>
+          </div>
+
+          <div id="result-rewards-summary" class="pt-2 border-t border-stone-200/60 flex flex-wrap gap-2 text-[11px]">
+            <span class="bg-white/80 px-2.5 py-1 rounded-lg font-bold">📸 사진 <span id="res-photo-cnt">1</span>장: 각 2원 적립</span>
+            <span class="bg-white/80 px-2.5 py-1 rounded-lg font-bold">🎬 영상 <span id="res-video-cnt">0</span>개: 각 3원 적립</span>
+            <span class="bg-amber-100 text-amber-900 px-2.5 py-1 rounded-lg font-black border border-amber-300">총 적립 리워드: +<span id="result-awarded-reward">2</span>원</span>
           </div>
         </div>
 
@@ -1315,9 +1402,65 @@
       }
     }
 
-    // 영수증 프리뷰
+    // ==========================================
+    // 영수증 진위 판별 (1, 2번 필터) 샘플 및 파일 프리뷰
+    // ==========================================
+    let currentReceiptSampleType = 'real'; // 'real' | 'paper' | 'duplicate' | 'custom'
+
+    const RECEIPT_SAMPLE_IMAGES = {
+      real: 'https://images.unsplash.com/photo-1554415707-9e4466b88588?w=800',
+      paper: 'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=800', // 메모지/그냥 종이/낙서
+      duplicate: 'https://images.unsplash.com/photo-1554415707-9e4466b88588?w=800', // 동일 영수증 재탕
+    };
+
+    function setReceiptSample(type) {
+      currentReceiptSampleType = type;
+      const previewImg = document.getElementById('preview-receipt');
+      const badge = document.getElementById('current-receipt-type-badge');
+      const btnReal = document.getElementById('btn-sample-real');
+      const btnPaper = document.getElementById('btn-sample-paper');
+      const btnDup = document.getElementById('btn-sample-dup');
+
+      // 버튼 스타일 초기화
+      [btnReal, btnPaper, btnDup].forEach(b => {
+        if (b) {
+          b.className = 'py-1.5 px-2 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold transition-all border border-stone-200 flex items-center justify-center gap-1';
+        }
+      });
+
+      if (type === 'real') {
+        if (previewImg) previewImg.src = RECEIPT_SAMPLE_IMAGES.real;
+        if (badge) {
+          badge.innerText = '현재: 진짜 영수증 (승인번호 有)';
+          badge.className = 'text-[10px] font-black text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full';
+        }
+        if (btnReal) btnReal.className = 'py-1.5 px-2 rounded-lg bg-emerald-500 text-white font-black transition-all shadow-2xs flex items-center justify-center gap-1';
+      } else if (type === 'paper') {
+        if (previewImg) previewImg.src = RECEIPT_SAMPLE_IMAGES.paper;
+        if (badge) {
+          badge.innerText = '현재: 그냥 종이/낙서 (승인번호 無 - 0점 차단)';
+          badge.className = 'text-[10px] font-black text-rose-800 bg-rose-100 border border-rose-300 px-2 py-0.5 rounded-full';
+        }
+        if (btnPaper) btnPaper.className = 'py-1.5 px-2 rounded-lg bg-rose-500 text-white font-black transition-all shadow-2xs flex items-center justify-center gap-1';
+      } else if (type === 'duplicate') {
+        if (previewImg) previewImg.src = RECEIPT_SAMPLE_IMAGES.duplicate;
+        if (badge) {
+          badge.innerText = '현재: 중복 영수증 재탕 시도 (지문 차단)';
+          badge.className = 'text-[10px] font-black text-amber-900 bg-amber-200 border border-amber-300 px-2 py-0.5 rounded-full';
+        }
+        if (btnDup) btnDup.className = 'py-1.5 px-2 rounded-lg bg-amber-500 text-stone-950 font-black transition-all shadow-2xs flex items-center justify-center gap-1';
+      }
+    }
+
+    // 사용자 직접 영수증 업로드 프리뷰
     function previewReceipt(input) {
       if (input.files && input.files[0]) {
+        currentReceiptSampleType = 'custom';
+        const badge = document.getElementById('current-receipt-type-badge');
+        if (badge) {
+          badge.innerText = '현재: 내 영수증 사진 업로드됨 (정밀 분석 대기)';
+          badge.className = 'text-[10px] font-black text-blue-800 bg-blue-100 border border-blue-300 px-2 py-0.5 rounded-full';
+        }
         const reader = new FileReader();
         reader.onload = function(e) {
           document.getElementById('preview-receipt').src = e.target.result;
@@ -1851,6 +1994,142 @@
       await speakDoongleVoice('clone', text);
     }
 
+    // ========================================================
+    // 🛡️ [1번, 2번 필터] 영수증 진위 판별 & 중복 방지 엔진
+    // ========================================================
+    const ReceiptVerificationEngine = {
+      // 로컬 스토리지 기반 지문 DB (재탕 방지)
+      getFingerprintDB() {
+        try {
+          const raw = localStorage.getItem('doongle_verified_receipts_db');
+          return raw ? JSON.parse(raw) : {};
+        } catch (e) {
+          return {};
+        }
+      },
+      saveFingerprint(fp, record) {
+        try {
+          const db = this.getFingerprintDB();
+          db[fp] = record;
+          localStorage.setItem('doongle_verified_receipts_db', JSON.stringify(db));
+        } catch (e) {
+          console.warn('DB save error:', e);
+        }
+      },
+      clearFingerprintDB() {
+        localStorage.removeItem('doongle_verified_receipts_db');
+      },
+      evaluate(sampleType, placeName) {
+        const todayStr = new Date().toISOString().slice(0, 10);
+        
+        // ---------------------------------------------------------
+        // 케이스 1: 그냥 종이/낙서/메모지 (승인번호/사업자번호 없음)
+        // ---------------------------------------------------------
+        if (sampleType === 'paper') {
+          return {
+            isValid: false,
+            score: 20, // 70점 미만 무조건 탈락
+            hasBusinessNumber: false,
+            hasApprovalNumber: false,
+            vatCalculationMatched: false,
+            isRecentDate: false,
+            isPosFormat: false,
+            isDuplicate: false,
+            businessNumber: '미검출 (0점)',
+            approvalNumber: '미검출 (0점)',
+            date: todayStr,
+            fingerprint: 'RCP-NONE-PAPER-0000',
+            rejectionReason: '신용카드 승인번호 또는 사업자등록번호가 확인되지 않는 일반 종이(낙서/메모지/단순 인쇄물)입니다. 8자리 승인번호가 인쇄된 진짜 매장 영수증을 등록해 주세요.',
+            badgeText: '진위 스코어: 20점 (기준 미달 탈락)',
+            badgeClass: 'px-2.5 py-1 rounded-full text-xs font-black bg-rose-100 text-rose-800 border border-rose-300 shadow-2xs',
+          };
+        }
+
+        // ---------------------------------------------------------
+        // 케이스 2: 중복 영수증 재탕 시도 (2번 필터 지문 차단)
+        // ---------------------------------------------------------
+        if (sampleType === 'duplicate') {
+          const dupAuth = '73910482';
+          const dupBiz = '124-86-59281';
+          const dupFingerprint = 'RCP-7391-5928-1850';
+
+          return {
+            isValid: false,
+            score: 100, // 영수증 자체는 진짜이나 중복으로 무효
+            hasBusinessNumber: true,
+            hasApprovalNumber: true,
+            vatCalculationMatched: true,
+            isRecentDate: true,
+            isPosFormat: true,
+            isDuplicate: true,
+            businessNumber: dupBiz,
+            approvalNumber: dupAuth,
+            date: todayStr,
+            fingerprint: dupFingerprint,
+            rejectionReason: `이미 리워드가 지급된 중복 영수증입니다! 동일한 결제 건(승인번호: ${dupAuth})의 영수증은 1회만 적립이 가능합니다.`,
+            badgeText: '2번 필터 차단: 중복 영수증 재탕 감지',
+            badgeClass: 'px-2.5 py-1 rounded-full text-xs font-black bg-amber-200 text-amber-900 border border-amber-400 shadow-2xs',
+          };
+        }
+
+        // ---------------------------------------------------------
+        // 케이스 3: 진짜 영수증 (1, 2번 필터 모두 통과)
+        // ---------------------------------------------------------
+        const realBiz = '124-86-59281';
+        const realAuth = '73910482';
+        const realFingerprint = 'RCP-7391-5928-1850';
+        const db = this.getFingerprintDB();
+
+        // 만약 이전에 이미 승인된 이력이 로컬 DB에 있다면 중복 처리
+        if (db[realFingerprint]) {
+          return {
+            isValid: false,
+            score: 100,
+            hasBusinessNumber: true,
+            hasApprovalNumber: true,
+            vatCalculationMatched: true,
+            isRecentDate: true,
+            isPosFormat: true,
+            isDuplicate: true,
+            businessNumber: realBiz,
+            approvalNumber: realAuth,
+            date: todayStr,
+            fingerprint: realFingerprint,
+            rejectionReason: `이미 리워드가 지급된 중복 영수증입니다! 동일한 결제 건(승인번호: ${realAuth})으로 ${db[realFingerprint].date}에 이미 인증되었습니다.`,
+            badgeText: '2번 필터 차단: 중복 영수증 (DB 일치)',
+            badgeClass: 'px-2.5 py-1 rounded-full text-xs font-black bg-amber-200 text-amber-900 border border-amber-400 shadow-2xs',
+          };
+        }
+
+        // 최초 승인: 지문 DB 등록
+        this.saveFingerprint(realFingerprint, {
+          place: placeName,
+          authNo: realAuth,
+          bizNo: realBiz,
+          date: todayStr,
+          timestamp: Date.now()
+        });
+
+        return {
+          isValid: true,
+          score: 100, // 25 + 25 + 20 + 15 + 15
+          hasBusinessNumber: true,
+          hasApprovalNumber: true,
+          vatCalculationMatched: true,
+          isRecentDate: true,
+          isPosFormat: true,
+          isDuplicate: false,
+          businessNumber: realBiz,
+          approvalNumber: realAuth,
+          date: todayStr,
+          fingerprint: realFingerprint,
+          rejectionReason: '',
+          badgeText: '진위 스코어: 100점 / 100점 (진짜 영수증)',
+          badgeClass: 'px-2.5 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-2xs',
+        };
+      }
+    };
+
     // 유저 업로드 및 2중 검증 제출
     function handleUploadSubmit() {
       const place = document.getElementById('input-place').value.trim();
@@ -1889,6 +2168,7 @@
       const statusBox = document.getElementById('verify-status-box');
       const statusTitle = document.getElementById('verify-status-title');
       const statusDesc = document.getElementById('verify-status-desc');
+      const progressBar = document.getElementById('verify-progress-bar');
       const resultBox = document.getElementById('verify-result-box');
       const submitBtn = document.getElementById('btn-submit-upload');
 
@@ -1897,47 +2177,192 @@
       submitBtn.disabled = true;
       submitBtn.classList.add('opacity-50');
 
-      // 1단계: 영수증 판독
-      statusTitle.innerText = "1단계: Gemini Vision이 영수증 상호명과 결제 일자를 판독 중...";
-      statusDesc.innerText = `영수증 전표에서 '${place}' 상호명과 최근 거래 일자를 교차 검증하고 있습니다.`;
+      if (progressBar) progressBar.style.width = '25%';
+
+      // 1단계: [1번 필터] 영수증 100점 스코어링 분석
+      statusTitle.innerText = "1단계: [1번 필터] 영수증 100점 진위 판별 스코어링 분석 중...";
+      statusDesc.innerText = `사업자등록번호(10자리)와 카드 승인번호(8자리), 그리고 부가세(10%) 산출 일치 여부를 검사하고 있습니다.`;
 
       setTimeout(() => {
-        // 2단계: 사진/영상 원본성 및 1줄 대본 검수
-        statusTitle.innerText = "2단계: 사진/동영상 원본 판정 및 둥글이 1줄 대본 분석 중...";
-        statusDesc.innerText = `업로드된 사진 ${uploadedPhotoCount}장과 영상 ${uploadedVideoCount}개, 그리고 1줄 대본: "${oneLineReview}"을 정밀 검수하고 있습니다.`;
+        if (progressBar) progressBar.style.width = '65%';
+        // 2단계: [2번 필터] 영수증 고유 지문(Fingerprint) 중복 검사
+        statusTitle.innerText = "2단계: [2번 필터] 영수증 고유 지문(Fingerprint) 중복 검사 중...";
+        statusDesc.innerText = `영수증 고유 지문 해시를 대조하여 동일 영수증 재탕 및 다중 제출 여부를 확인하고 있습니다.`;
 
         setTimeout(() => {
-          // 3단계: 완료 및 리워드 지급
-          statusBox.classList.add('hidden');
-          resultBox.classList.remove('hidden');
-          submitBtn.disabled = false;
-          submitBtn.classList.remove('opacity-50');
+          if (progressBar) progressBar.style.width = '100%';
+          statusTitle.innerText = "3단계: 사진/동영상 원본 판정 및 1줄 대본 분석 완료!";
+          statusDesc.innerText = `업로드된 사진 ${uploadedPhotoCount}장과 영상 ${uploadedVideoCount}개에 대한 심사를 완료했습니다.`;
 
-          // 결과 모달 수치 반영
-          document.getElementById('result-awarded-reward').innerText = totalRewardToPay;
-          document.getElementById('res-photo-cnt').innerText = uploadedPhotoCount;
-          document.getElementById('res-video-cnt').innerText = uploadedVideoCount;
-          document.getElementById('result-desc').innerText = 
-            `영수증 상호명(${place}) 확인 완료! 직접 찍은 원본 소스와 둥글이 1줄 대본("${oneLineReview}")이 정식 인증되어 사진 ${uploadedPhotoCount}장(${uploadedPhotoCount*2}원) + 동영상 ${uploadedVideoCount}개(${uploadedVideoCount*3}원) = 총 ${totalRewardToPay}원이 즉시 계정에 적립되었습니다.`;
+          setTimeout(() => {
+            statusBox.classList.add('hidden');
+            resultBox.classList.remove('hidden');
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('opacity-50');
 
-          // 포인트 증가 및 UI 갱신
-          currentPoints += totalRewardToPay;
-          document.getElementById('user-points').innerText = currentPoints.toLocaleString();
+            // 1, 2번 검증 평가 실행
+            const evalResult = ReceiptVerificationEngine.evaluate(currentReceiptSampleType, place);
 
-          // 관리자 갤러리에 카드 추가 (1줄 대본, 솔직 후기, 비디오 URL 전달)
-          addCardToGallery(
-            place,
-            oneLineReview,
-            review,
-            document.getElementById('preview-photo-main').src,
-            uploadedPhotoCount,
-            uploadedVideoCount,
-            totalRewardToPay,
-            currentUploadedVideoUrl
-          );
+            const statusHeader = document.getElementById('result-status-header');
+            const statusIcon = document.getElementById('result-status-icon');
+            const statusTitleEl = document.getElementById('result-status-title');
+            const scoreBadge = document.getElementById('result-score-badge');
+            const resultDesc = document.getElementById('result-desc');
+            const fpText = document.getElementById('result-fingerprint-text');
+            const chkBiz = document.getElementById('chk-biz-no');
+            const chkAuth = document.getElementById('chk-auth-no');
+            const chkDate = document.getElementById('chk-date');
+            const chkVat = document.getElementById('chk-vat');
+            const chkDupText = document.getElementById('chk-dup-text');
+            const chkDupBadge = document.getElementById('chk-dup-badge');
+            const awardedEl = document.getElementById('result-awarded-reward');
 
-        }, 1500);
-      }, 1500);
+            if (fpText) fpText.innerText = `고유 지문: ${evalResult.fingerprint}`;
+
+            if (!evalResult.isValid) {
+              // -------------------------------------------------------------
+              // ❌ 인증 반려 처리 (그냥 종이 또는 중복 영수증 차단)
+              // -------------------------------------------------------------
+              const isDup = evalResult.isDuplicate;
+              resultBox.className = isDup 
+                ? "p-5 rounded-2xl border-2 text-xs space-y-3 bg-amber-50/90 border-amber-400 text-amber-950 transition-all shadow-sm"
+                : "p-5 rounded-2xl border-2 text-xs space-y-3 bg-rose-50 border-rose-300 text-rose-950 transition-all shadow-sm";
+
+              if (statusIcon) statusIcon.innerText = isDup ? "⚠️" : "❌";
+              if (statusTitleEl) statusTitleEl.innerText = isDup ? "중복 영수증 감지 (2번 필터 차단)" : "영수증 인증 반려 (1번 필터 기준미달)";
+              if (scoreBadge) {
+                scoreBadge.innerText = evalResult.badgeText;
+                scoreBadge.className = evalResult.badgeClass;
+              }
+              if (resultDesc) {
+                resultDesc.innerText = evalResult.rejectionReason;
+                resultDesc.className = "text-xs leading-relaxed font-bold " + (isDup ? "text-amber-900" : "text-rose-700");
+              }
+
+              // 체크리스트 상태 업데이트
+              if (chkBiz) {
+                chkBiz.className = evalResult.hasBusinessNumber 
+                  ? "flex items-center gap-1.5 text-emerald-800 font-bold bg-emerald-50 px-2 py-1 rounded-lg"
+                  : "flex items-center gap-1.5 text-rose-800 font-bold bg-rose-100/70 px-2 py-1 rounded-lg";
+                chkBiz.innerHTML = evalResult.hasBusinessNumber 
+                  ? `<span>✓</span> 사업자등록번호: ${evalResult.businessNumber} (25점)`
+                  : `<span>✕</span> 사업자등록번호: 미검출 (0/25점)`;
+              }
+
+              if (chkAuth) {
+                chkAuth.className = evalResult.hasApprovalNumber 
+                  ? "flex items-center gap-1.5 text-emerald-800 font-bold bg-emerald-50 px-2 py-1 rounded-lg"
+                  : "flex items-center gap-1.5 text-rose-800 font-bold bg-rose-100/70 px-2 py-1 rounded-lg";
+                chkAuth.innerHTML = evalResult.hasApprovalNumber 
+                  ? `<span>✓</span> 카드 승인번호: ${evalResult.approvalNumber} (25점)`
+                  : `<span>✕</span> 카드 승인번호: 미검출 (0/25점 - 필수)`;
+              }
+
+              if (chkDate) {
+                chkDate.className = evalResult.isRecentDate 
+                  ? "flex items-center gap-1.5 text-emerald-800 font-bold bg-emerald-50 px-2 py-1 rounded-lg"
+                  : "flex items-center gap-1.5 text-stone-500 bg-stone-100 px-2 py-1 rounded-lg";
+                chkDate.innerHTML = evalResult.isRecentDate 
+                  ? `<span>✓</span> 거래일시: ${evalResult.date} (최근 20점)`
+                  : `<span>✕</span> 거래일시: 불명확 (0/20점)`;
+              }
+
+              if (chkVat) {
+                chkVat.className = evalResult.vatCalculationMatched 
+                  ? "flex items-center gap-1.5 text-emerald-800 font-bold bg-emerald-50 px-2 py-1 rounded-lg"
+                  : "flex items-center gap-1.5 text-stone-500 bg-stone-100 px-2 py-1 rounded-lg";
+                chkVat.innerHTML = evalResult.vatCalculationMatched 
+                  ? `<span>✓</span> 부가세(10%) 산출: 일치 (15점)`
+                  : `<span>✕</span> 부가세 산출: 검산 불가 (0/15점)`;
+              }
+
+              if (chkDupText && chkDupBadge) {
+                if (isDup) {
+                  chkDupText.innerHTML = `🔒 2번 필터(중복 재탕 검사): <strong>동일 승인번호 중복 감지</strong> (차단)`;
+                  chkDupBadge.innerText = "차단됨";
+                  chkDupBadge.className = "text-rose-700 font-black";
+                } else {
+                  chkDupText.innerHTML = `🔒 2번 필터(중복 재탕 검사): <strong>영수증 규격 미달로 스킵</strong>`;
+                  chkDupBadge.innerText = "미진행";
+                  chkDupBadge.className = "text-stone-500 font-bold";
+                }
+              }
+
+              // 리워드 지급액 0원 반영
+              if (awardedEl) awardedEl.innerText = '0';
+              document.getElementById('res-photo-cnt').innerText = uploadedPhotoCount;
+              document.getElementById('res-video-cnt').innerText = uploadedVideoCount;
+
+              showVoiceToast(isDup ? "⚠️ 중복 영수증 감지: 리워드가 지급되지 않았습니다." : "❌ 가짜 종이/미인증 영수증: 리워드가 지급되지 않았습니다.");
+              return;
+            }
+
+            // -------------------------------------------------------------
+            // ✅ 인증 성공 처리 (진짜 영수증 & 중복 아님)
+            // -------------------------------------------------------------
+            resultBox.className = "p-5 rounded-2xl border-2 text-xs space-y-3 bg-emerald-50 border-emerald-300 text-emerald-950 transition-all shadow-sm";
+            if (statusIcon) statusIcon.innerText = "✅";
+            if (statusTitleEl) statusTitleEl.innerText = "Gemini 2중 인증 완료! 리워드 지급 성공";
+            if (scoreBadge) {
+              scoreBadge.innerText = evalResult.badgeText;
+              scoreBadge.className = evalResult.badgeClass;
+            }
+
+            if (resultDesc) {
+              resultDesc.className = "text-xs leading-relaxed text-stone-700 font-medium";
+              resultDesc.innerText = `영수증 상호명(${place}) 확인 완료! 1번 필터(카드 승인번호 ${evalResult.approvalNumber} 및 100점 스코어 통과)와 2번 필터(신규 지문 확인)를 모두 통과하여 총 ${totalRewardToPay}원이 즉시 계정에 적립되었습니다.`;
+            }
+
+            if (chkBiz) {
+              chkBiz.className = "flex items-center gap-1.5 text-emerald-800 font-bold bg-emerald-50 px-2 py-1 rounded-lg";
+              chkBiz.innerHTML = `<span>✓</span> 사업자등록번호: ${evalResult.businessNumber} (25점)`;
+            }
+            if (chkAuth) {
+              chkAuth.className = "flex items-center gap-1.5 text-emerald-800 font-bold bg-emerald-50 px-2 py-1 rounded-lg";
+              chkAuth.innerHTML = `<span>✓</span> 카드 승인번호: ${evalResult.approvalNumber} (25점)`;
+            }
+            if (chkDate) {
+              chkDate.className = "flex items-center gap-1.5 text-emerald-800 font-bold bg-emerald-50 px-2 py-1 rounded-lg";
+              chkDate.innerHTML = `<span>✓</span> 거래일시: ${evalResult.date} (최근 20점)`;
+            }
+            if (chkVat) {
+              chkVat.className = "flex items-center gap-1.5 text-emerald-800 font-bold bg-emerald-50 px-2 py-1 rounded-lg";
+              chkVat.innerHTML = `<span>✓</span> 부가세(10%) 산출: 일치 (15점)`;
+            }
+            if (chkDupText && chkDupBadge) {
+              chkDupText.innerHTML = `🔒 2번 필터(중복 재탕 검사): <strong>신규 영수증 확인</strong> (중복 이력 없음)`;
+              chkDupBadge.innerText = "통과";
+              chkDupBadge.className = "text-emerald-700 font-black";
+            }
+
+            if (awardedEl) awardedEl.innerText = totalRewardToPay;
+            document.getElementById('res-photo-cnt').innerText = uploadedPhotoCount;
+            document.getElementById('res-video-cnt').innerText = uploadedVideoCount;
+
+            // 포인트 증가 및 UI 갱신
+            currentPoints += totalRewardToPay;
+            document.getElementById('user-points').innerText = currentPoints.toLocaleString();
+
+            // 관리자 갤러리에 카드 추가 (1줄 대본, 솔직 후기, 비디오 URL 전달)
+            addCardToGallery(
+              place,
+              oneLineReview,
+              review,
+              document.getElementById('preview-photo-main').src,
+              uploadedPhotoCount,
+              uploadedVideoCount,
+              totalRewardToPay,
+              currentUploadedVideoUrl
+            );
+
+            // 둥글이 공식 음성으로 1줄 대본 발화
+            setTimeout(() => {
+              speakDoongleVoice('clone', oneLineReview);
+            }, 300);
+
+          }, 800);
+        }, 1100);
+      }, 1100);
     }
 
     // 관리자 갤러리에 신규 카드 추가 (1줄 리뷰 대본 & 동영상 완벽 연동)

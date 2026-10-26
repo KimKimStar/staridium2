@@ -11,11 +11,20 @@ export type VerificationStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 
 export interface ReceiptData {
   isValidReceipt: boolean;
+  score: number;               // 0 ~ 100점 영수증 진위 스코어
+  businessNumber?: string;     // 사업자등록번호 (10자리)
+  hasBusinessNumber: boolean;  // 사업자번호 유효 검출 여부 (25점)
+  approvalNumber?: string;     // 신용카드/현금영수증 승인번호 (8자리)
+  hasApprovalNumber: boolean;  // 승인번호 유효 검출 여부 (25점)
+  vatCalculationMatched: boolean; // 부가세(10%) 역산 일치 여부 (15점)
+  isRecentDate: boolean;       // 최근 60일 이내 결제 여부 (20점)
+  isPosFormat: boolean;        // 감열지/POS 단말기 출력 양식 여부 (15점)
   storeName?: string;
   transactionDate?: string;
-  isDateRecent?: boolean; // 30일 이내 여부
   totalAmount?: number;
-  confidence: number; // 0.0 ~ 1.0
+  confidence: number;          // 0.0 ~ 1.0
+  fingerprint?: string;        // 사업자+일시+승인번호+금액 기반 고유 지문 해시
+  isDuplicate?: boolean;       // 중복 제출 여부
   notes?: string;
 }
 
