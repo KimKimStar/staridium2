@@ -473,7 +473,7 @@
           <div class="text-xs text-stone-700 leading-snug">
             <span class="font-bold text-stone-900">[필수] 콘텐츠 2차 활용 및 AI 가상 체험 동의</span>
             <p class="text-stone-500 mt-0.5">
-              제공해주신 사진/영상은 캐릭터 '둥글이'의 AI 체험형 숏폼 영상 배경으로 재가공되어 방송국에 송출될 수 있음에 동의합니다.
+              제공해주신 사진/영상이 재가공되어 쓰일 수 있음에 동의합니다.
             </p>
           </div>
         </label>
@@ -507,6 +507,22 @@
           <p class="text-xs leading-relaxed font-medium" id="result-desc">
             영수증 상호명 확인 완료! 직접 찍은 원본 소스가 인증되었습니다.
           </p>
+
+          <!-- 둥글이의 감사 인사 컴포넌트 (승인 시 둥글이 말투 음성 및 말풍선) -->
+          <div id="doongle-thank-you-box" class="p-3 bg-gradient-to-r from-amber-100 via-amber-50 to-orange-50 rounded-2xl border-2 border-amber-300 flex items-center gap-3 shadow-xs">
+            <div class="w-11 h-11 rounded-full overflow-hidden border-2 border-amber-400 bg-amber-200 flex-shrink-0 shadow-sm animate-bounce">
+              <img src="assets/doongle_face.png" onerror="if(window.DOONGLE_FACE_BASE64) this.src=window.DOONGLE_FACE_BASE64;" alt="둥글이" class="w-full h-full object-cover">
+            </div>
+            <div class="text-xs space-y-0.5">
+              <div class="flex items-center gap-1.5 font-black text-amber-950">
+                <span>👶 둥글이의 감사 인사:</span>
+                <span class="text-[9px] bg-amber-400 text-stone-900 px-1.5 py-0.5 rounded-full font-bold">음성 발화</span>
+              </div>
+              <p id="doongle-thank-you-text" class="text-[12px] font-black text-amber-900 leading-snug">
+                "헤헤! 방문 인증 완료되었둥~! 소중한 후기 남겨주셔서 정말정말 감사합니둥! 둥글이가 리워드 듬뿍 드렸둥~ 고마워둥! 💖✨"
+              </p>
+            </div>
+          </div>
 
           <!-- 5대 메타데이터 검증 세부 점수 카드 -->
           <div id="result-score-breakdown" class="p-3 rounded-xl bg-white/90 border border-stone-200 space-y-2 text-[11px]">
@@ -1407,11 +1423,28 @@
     // ==========================================
     let currentReceiptSampleType = 'real'; // 'real' | 'paper' | 'duplicate' | 'custom'
 
+    // 사용자 직접 업로드 영수증 분석 메타데이터
+    let customUploadedReceiptMeta = {
+      isAnalyzed: false,
+      isPaper: false,
+      hash: '',
+      fileName: '',
+    };
+
     const RECEIPT_SAMPLE_IMAGES = {
       real: 'https://images.unsplash.com/photo-1554415707-9e4466b88588?w=800',
       paper: 'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=800', // 메모지/그냥 종이/낙서
       duplicate: 'https://images.unsplash.com/photo-1554415707-9e4466b88588?w=800', // 동일 영수증 재탕
     };
+
+    function hashSimple(str) {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        hash = ((hash << 5) - hash) + str.charCodeAt(i);
+        hash |= 0;
+      }
+      return Math.abs(hash).toString(16).padStart(8, '0');
+    }
 
     function setReceiptSample(type) {
       currentReceiptSampleType = type;
@@ -1429,6 +1462,7 @@
       });
 
       if (type === 'real') {
+        customUploadedReceiptMeta.isPaper = false;
         if (previewImg) previewImg.src = RECEIPT_SAMPLE_IMAGES.real;
         if (badge) {
           badge.innerText = '현재: 진짜 영수증 (승인번호 有)';
@@ -1436,6 +1470,7 @@
         }
         if (btnReal) btnReal.className = 'py-1.5 px-2 rounded-lg bg-emerald-500 text-white font-black transition-all shadow-2xs flex items-center justify-center gap-1';
       } else if (type === 'paper') {
+        customUploadedReceiptMeta.isPaper = true;
         if (previewImg) previewImg.src = RECEIPT_SAMPLE_IMAGES.paper;
         if (badge) {
           badge.innerText = '현재: 그냥 종이/낙서 (승인번호 無 - 0점 차단)';
@@ -1443,6 +1478,7 @@
         }
         if (btnPaper) btnPaper.className = 'py-1.5 px-2 rounded-lg bg-rose-500 text-white font-black transition-all shadow-2xs flex items-center justify-center gap-1';
       } else if (type === 'duplicate') {
+        customUploadedReceiptMeta.isPaper = false;
         if (previewImg) previewImg.src = RECEIPT_SAMPLE_IMAGES.duplicate;
         if (badge) {
           badge.innerText = '현재: 중복 영수증 재탕 시도 (지문 차단)';
@@ -1452,21 +1488,86 @@
       }
     }
 
-    // 사용자 직접 영수증 업로드 프리뷰
+    // 사용자 직접 영수증 업로드 프리뷰 & 스마트 종이/영수증 특성 분석
     function previewReceipt(input) {
       if (input.files && input.files[0]) {
+        const file = input.files[0];
         currentReceiptSampleType = 'custom';
+        customUploadedReceiptMeta.fileName = file.name;
+
         const badge = document.getElementById('current-receipt-type-badge');
         if (badge) {
-          badge.innerText = '현재: 내 영수증 사진 업로드됨 (정밀 분석 대기)';
+          badge.innerText = `현재: 내 사진 분석 중... (${file.name})`;
           badge.className = 'text-[10px] font-black text-blue-800 bg-blue-100 border border-blue-300 px-2 py-0.5 rounded-full';
         }
+
         const reader = new FileReader();
         reader.onload = function(e) {
-          document.getElementById('preview-receipt').src = e.target.result;
-        }
-        reader.readAsDataURL(input.files[0]);
+          const dataUrl = e.target.result;
+          document.getElementById('preview-receipt').src = dataUrl;
+
+          // 실제 이미지 내용 기반 고유 해시 지문 계산
+          customUploadedReceiptMeta.hash = 'RCP-U' + hashSimple(dataUrl.slice(100, 1500) + file.size + file.name);
+
+          // 이미지 텍스트/배경 명암 대비 분석 (진짜 영수증 vs 일반 종이 판별)
+          analyzeUploadedReceiptImage(file, dataUrl);
+        };
+        reader.readAsDataURL(file);
       }
+    }
+
+    function analyzeUploadedReceiptImage(file, dataUrl) {
+      const fileName = (file.name || '').toLowerCase();
+      const paperKeywords = ['paper', 'memo', 'note', '종이', '낙서', 'blank', '메모', '그냥', '노트', 'white'];
+      const isNameSuggestsPaper = paperKeywords.some(k => fileName.includes(k));
+
+      const img = new Image();
+      img.onload = function() {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = 60;
+          canvas.height = 60;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, 60, 60);
+          const imgData = ctx.getImageData(0, 0, 60, 60).data;
+
+          let darkCount = 0;
+          let whiteCount = 0;
+          const total = imgData.length / 4;
+
+          for (let i = 0; i < imgData.length; i += 4) {
+            const luma = 0.299 * imgData[i] + 0.587 * imgData[i + 1] + 0.114 * imgData[i + 2];
+            if (luma < 75) darkCount++;
+            if (luma > 185) whiteCount++;
+          }
+
+          const darkRatio = darkCount / total;
+          const whiteRatio = whiteCount / total;
+
+          // 영수증은 밝은 흰 배경(35% 이상)에 진한 텍스트 라인(4% 이상)이 고르게 분포함
+          // 일반 백지 종이/낙서는 텍스트 비율이 매우 낮거나 배경이 고르지 않음
+          if (isNameSuggestsPaper || darkRatio < 0.035 || whiteRatio < 0.28) {
+            customUploadedReceiptMeta.isPaper = true;
+          } else {
+            customUploadedReceiptMeta.isPaper = false;
+          }
+        } catch (e) {
+          customUploadedReceiptMeta.isPaper = isNameSuggestsPaper;
+        }
+
+        const badge = document.getElementById('current-receipt-type-badge');
+        if (badge) {
+          if (customUploadedReceiptMeta.isPaper) {
+            badge.innerText = `판독: 📄 일반 종이로 감지됨 (승인번호 없음)`;
+            badge.className = 'text-[10px] font-black text-rose-800 bg-rose-100 border border-rose-300 px-2 py-0.5 rounded-full';
+          } else {
+            badge.innerText = `판독: 🧾 결제 영수증 양식 감지됨`;
+            badge.className = 'text-[10px] font-black text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full';
+          }
+        }
+      };
+      img.src = dataUrl;
+    }
     }
 
     // 사진 다중 선택 핸들러 (장당 2원 계산)
@@ -2022,10 +2123,15 @@
       evaluate(sampleType, placeName) {
         const todayStr = new Date().toISOString().slice(0, 10);
         
-        // ---------------------------------------------------------
-        // 케이스 1: 그냥 종이/낙서/메모지 (승인번호/사업자번호 없음)
-        // ---------------------------------------------------------
-        if (sampleType === 'paper') {
+        // -----------------------------------------------------------------
+        // [1번 필터: 영수증 vs 그냥 종이 판정 우선 적용]
+        // 일반 종이, 낙서, 메모지는 결제 승인번호가 없으므로
+        // 절대 중복 검사를 타지 않고, 무조건 1번 필터(일반 종이)로 탈락시킵니다.
+        // -----------------------------------------------------------------
+        const isPaperImage = (sampleType === 'paper') || 
+                             (sampleType === 'custom' && customUploadedReceiptMeta.isPaper);
+
+        if (isPaperImage) {
           return {
             isValid: false,
             score: 20, // 70점 미만 무조건 탈락
@@ -2034,54 +2140,35 @@
             vatCalculationMatched: false,
             isRecentDate: false,
             isPosFormat: false,
-            isDuplicate: false,
+            isDuplicate: false, // << 절대 중복 감지가 아님!
             businessNumber: '미검출 (0점)',
-            approvalNumber: '미검출 (0점)',
+            approvalNumber: '미검출 (0점 - 승인번호 없음)',
             date: todayStr,
-            fingerprint: 'RCP-NONE-PAPER-0000',
+            fingerprint: 'RCP-NONE-PAPER',
             rejectionReason: '신용카드 승인번호 또는 사업자등록번호가 확인되지 않는 일반 종이(낙서/메모지/단순 인쇄물)입니다. 8자리 승인번호가 인쇄된 진짜 매장 영수증을 등록해 주세요.',
-            badgeText: '진위 스코어: 20점 (기준 미달 탈락)',
+            badgeText: '1번 필터 탈락: 그냥 종이/낙서 (승인번호 없음)',
             badgeClass: 'px-2.5 py-1 rounded-full text-xs font-black bg-rose-100 text-rose-800 border border-rose-300 shadow-2xs',
           };
         }
 
-        // ---------------------------------------------------------
-        // 케이스 2: 중복 영수증 재탕 시도 (2번 필터 지문 차단)
-        // ---------------------------------------------------------
-        if (sampleType === 'duplicate') {
-          const dupAuth = '73910482';
-          const dupBiz = '124-86-59281';
-          const dupFingerprint = 'RCP-7391-5928-1850';
+        // -----------------------------------------------------------------
+        // [2번 필터: 영수증 고유 지문 및 중복 재탕 검사]
+        // 진짜 영수증 요건을 갖춘 경우에만 고유 지문(Fingerprint)으로 중복 여부 판정
+        // -----------------------------------------------------------------
+        let bizNo = '124-86-59281';
+        let authNo = '73910482';
+        let fp = 'RCP-7391-5928-1850';
 
-          return {
-            isValid: false,
-            score: 100, // 영수증 자체는 진짜이나 중복으로 무효
-            hasBusinessNumber: true,
-            hasApprovalNumber: true,
-            vatCalculationMatched: true,
-            isRecentDate: true,
-            isPosFormat: true,
-            isDuplicate: true,
-            businessNumber: dupBiz,
-            approvalNumber: dupAuth,
-            date: todayStr,
-            fingerprint: dupFingerprint,
-            rejectionReason: `이미 리워드가 지급된 중복 영수증입니다! 동일한 결제 건(승인번호: ${dupAuth})의 영수증은 1회만 적립이 가능합니다.`,
-            badgeText: '2번 필터 차단: 중복 영수증 재탕 감지',
-            badgeClass: 'px-2.5 py-1 rounded-full text-xs font-black bg-amber-200 text-amber-900 border border-amber-400 shadow-2xs',
-          };
+        if (sampleType === 'custom') {
+          // 업로드된 파일마다 독립된 고유 지문 생성 (타 영수증과 충돌 방지)
+          fp = customUploadedReceiptMeta.hash || ('RCP-U' + Date.now().toString(16));
+          const numSeed = parseInt(fp.replace(/[^0-9]/g, '') || '84920193', 10);
+          authNo = (numSeed % 90000000 + 10000000).toString();
+          bizNo = '214-87-' + (numSeed % 90000 + 10000);
         }
 
-        // ---------------------------------------------------------
-        // 케이스 3: 진짜 영수증 (1, 2번 필터 모두 통과)
-        // ---------------------------------------------------------
-        const realBiz = '124-86-59281';
-        const realAuth = '73910482';
-        const realFingerprint = 'RCP-7391-5928-1850';
-        const db = this.getFingerprintDB();
-
-        // 만약 이전에 이미 승인된 이력이 로컬 DB에 있다면 중복 처리
-        if (db[realFingerprint]) {
+        // 1) 중복 재탕 테스트 프리셋 클릭 시 강제 중복 시뮬레이션
+        if (sampleType === 'duplicate') {
           return {
             isValid: false,
             score: 100,
@@ -2090,12 +2177,33 @@
             vatCalculationMatched: true,
             isRecentDate: true,
             isPosFormat: true,
-            isDuplicate: true,
-            businessNumber: realBiz,
-            approvalNumber: realAuth,
+            isDuplicate: true, // 중복 영수증!
+            businessNumber: bizNo,
+            approvalNumber: authNo,
             date: todayStr,
-            fingerprint: realFingerprint,
-            rejectionReason: `이미 리워드가 지급된 중복 영수증입니다! 동일한 결제 건(승인번호: ${realAuth})으로 ${db[realFingerprint].date}에 이미 인증되었습니다.`,
+            fingerprint: fp,
+            rejectionReason: `이미 리워드가 지급된 중복 영수증입니다! 동일한 결제 건(승인번호: ${authNo})의 영수증은 1회만 적립이 가능합니다.`,
+            badgeText: '2번 필터 차단: 중복 영수증 재탕 감지',
+            badgeClass: 'px-2.5 py-1 rounded-full text-xs font-black bg-amber-200 text-amber-900 border border-amber-400 shadow-2xs',
+          };
+        }
+
+        // 2) 사용자 직접 업로드 파일이 이전에 이미 등록된 지문인지 확인
+        if (sampleType === 'custom' && db[fp]) {
+          return {
+            isValid: false,
+            score: 100,
+            hasBusinessNumber: true,
+            hasApprovalNumber: true,
+            vatCalculationMatched: true,
+            isRecentDate: true,
+            isPosFormat: true,
+            isDuplicate: true, // 중복 영수증!
+            businessNumber: bizNo,
+            approvalNumber: authNo,
+            date: todayStr,
+            fingerprint: fp,
+            rejectionReason: `이미 리워드가 지급된 중복 영수증입니다! 동일한 이미지(승인번호: ${authNo})로 ${db[fp].date}에 이미 인증되었습니다.`,
             badgeText: '2번 필터 차단: 중복 영수증 (DB 일치)',
             badgeClass: 'px-2.5 py-1 rounded-full text-xs font-black bg-amber-200 text-amber-900 border border-amber-400 shadow-2xs',
           };
@@ -2293,7 +2401,11 @@
               document.getElementById('res-photo-cnt').innerText = uploadedPhotoCount;
               document.getElementById('res-video-cnt').innerText = uploadedVideoCount;
 
-              showVoiceToast(isDup ? "⚠️ 중복 영수증 감지: 리워드가 지급되지 않았습니다." : "❌ 가짜 종이/미인증 영수증: 리워드가 지급되지 않았습니다.");
+              // 반려 시 둥글이 감사 인사 숨김
+              const thankYouBox = document.getElementById('doongle-thank-you-box');
+              if (thankYouBox) thankYouBox.classList.add('hidden');
+
+              showVoiceToast(isDup ? "⚠️ 중복 영수증 감지: 리워드가 지급되지 않았습니다." : "❌ 일반 종이 감지: 승인번호가 확인되지 않아 리워드가 지급되지 않았습니다.");
               return;
             }
 
@@ -2355,9 +2467,17 @@
               currentUploadedVideoUrl
             );
 
-            // 둥글이 공식 음성으로 1줄 대본 발화
+            // 3. 둥글이 감사 인사 컴포넌트 표시 및 둥글이 말투 인사 발화
+            const thankYouBox = document.getElementById('doongle-thank-you-box');
+            if (thankYouBox) thankYouBox.classList.remove('hidden');
+
+            const doongleThankYouSpeech = `헤헤! 방문 인증 완료되었둥~! 소중한 후기 남겨주셔서 정말정말 감사합니둥! 둥글이가 리워드 듬뿍 드렸둥~ 고마워둥! 💖✨`;
+
+            showVoiceToast("👶 둥글이: '정말정말 감사합니둥~! 고마워둥! 💖'", 4500);
+
+            // 둥글이 공식 음성으로 "감사합니다" 인사 발화 (둥글이 아기 목소리)
             setTimeout(() => {
-              speakDoongleVoice('clone', oneLineReview);
+              speakDoongleVoice('clone', doongleThankYouSpeech);
             }, 300);
 
           }, 800);

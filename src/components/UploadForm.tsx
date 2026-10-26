@@ -136,6 +136,19 @@ export default function UploadForm() {
           message: data.message,
           verification: data.verification,
         });
+
+        // 둥글이 감사 인사 음성 발화 (둥글이 아기 목소리 톤)
+        if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+          try {
+            window.speechSynthesis.cancel();
+            const utter = new SpeechSynthesisUtterance('헤헤! 방문 인증 완료되었둥~! 소중한 후기 남겨주셔서 정말정말 감사합니둥! 둥글이가 리워드 듬뿍 드렸둥~ 고마워둥!');
+            utter.rate = 1.15;
+            utter.pitch = 1.55;
+            window.speechSynthesis.speak(utter);
+          } catch (e) {
+            console.warn('Speech synthesis error:', e);
+          }
+        }
       } else {
         setResult({
           success: false,
@@ -375,7 +388,7 @@ export default function UploadForm() {
             <div className="text-xs text-stone-700 leading-snug">
               <span className="font-bold text-stone-900">[필수] 콘텐츠 2차 활용 및 AI 가상 체험 동의</span>
               <p className="text-stone-500 mt-0.5">
-                제공해주신 사진/영상은 캐릭터 '둥글이'의 AI 체험형 숏폼 영상 배경으로 재가공되어 홍보 방송국에 송출될 수 있음에 동의합니다.
+                제공해주신 사진/영상이 재가공되어 쓰일 수 있음에 동의합니다.
               </p>
             </div>
           </label>
@@ -437,10 +450,28 @@ export default function UploadForm() {
             )}
 
             {result.success && (
-              <div className="mt-3 pt-3 border-t border-emerald-200/60 flex flex-wrap gap-2 text-[11px]">
-                <span className="bg-white/80 px-2 py-1 rounded-lg">📸 사진 {result.photoCount}장: 각 2원 지급</span>
-                <span className="bg-white/80 px-2 py-1 rounded-lg">🎬 영상 {result.videoCount}개: 각 3원 지급</span>
-              </div>
+              <>
+                {/* 둥글이 감사 인사 말풍선 */}
+                <div className="mt-3 p-3 bg-gradient-to-r from-amber-100 via-amber-50 to-orange-50 rounded-2xl border-2 border-amber-300 flex items-center gap-3 shadow-xs">
+                  <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-amber-400 bg-amber-200 flex-shrink-0 shadow-sm animate-bounce flex items-center justify-center text-lg">
+                    👶
+                  </div>
+                  <div className="text-xs space-y-0.5">
+                    <div className="flex items-center gap-1.5 font-black text-amber-950">
+                      <span>👶 둥글이의 감사 인사:</span>
+                      <span className="text-[9px] bg-amber-400 text-stone-900 px-1.5 py-0.5 rounded-full font-bold">음성 발화</span>
+                    </div>
+                    <p className="text-[12px] font-black text-amber-900 leading-snug">
+                      &ldquo;헤헤! 방문 인증 완료되었둥~! 소중한 후기 남겨주셔서 정말정말 감사합니둥! 둥글이가 리워드 듬뿍 드렸둥~ 고마워둥! 💖✨&rdquo;
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-3 pt-3 border-t border-emerald-200/60 flex flex-wrap gap-2 text-[11px]">
+                  <span className="bg-white/80 px-2 py-1 rounded-lg">📸 사진 {result.photoCount}장: 각 2원 지급</span>
+                  <span className="bg-white/80 px-2 py-1 rounded-lg">🎬 영상 {result.videoCount}개: 각 3원 지급</span>
+                </div>
+              </>
             )}
           </div>
         )}
